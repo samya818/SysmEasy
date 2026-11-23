@@ -114,6 +114,6 @@ L'interface est accessible à l'adresse : **[http://localhost:8000](http://local
 
 ## 🎓 Cadre Académique & Mentions
 
-Ce projet s'inscrit dans le cadre du **Projet de Fin d'Études (PFE)** pour l'obtention du Diplôme d'Ingénieur d'État à l'**École Nationale Supérieure d'Arts et Métiers (ENSAM) de Meknès**.
+Ce projet s'inscrit dans le cadre du **Projet Métier ** pour l'obtention du Diplôme d'Ingénieur d'État à l'**École Nationale Supérieure d'Arts et Métiers (ENSAM) de Meknès**.
 
 Nous tenons à exprimer notre profonde gratitude envers nos encadrants, **Mme Ibtissam El-Hassani** et **M. Damien Motte**, pour leur accompagnement scientifique, leurs conseils avisés et leur soutien tout au long de la réalisation de ce travail.
