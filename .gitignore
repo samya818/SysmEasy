@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+ENV/
+
+# Logs et temporaires
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Fichiers de test temporaires
+test_*.pdf
+test_*.png
+extract.py
+
+# Sorties générées à la volée (on conserve les payloads d'exemple via .gitkeep)
+static/generated/*.pdf
+static/generated/gen_*.png
+!static/generated/.gitkeep
+
+# IDEs
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,36 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "sysml": "https://www.omg.org/spec/SysML/20230201/SysML-v2#",
+    "kerml": "https://www.omg.org/spec/KerML/20230201/KerML#"
+  },
+  "@type": "sysml:Package",
+  "identifier": "PKG-PLM-POWERTRAIN-2026",
+  "title": "Modèle Export SysML v2 pour Continuité PLM (powertrain)",
+  "created": "2026-11-23T17:31:09.524413",
+  "source": "Système Multi-Agents IA — ENSAM Meknès",
+  "interoperabilityStandard": "OMG Systems Modeling API & Services 1.0 (Beta)",
+  "elements": [
+    {
+      "@type": "sysml:PartUsage",
+      "name": "motor",
+      "status": "EBOM_APPROVED",
+      "plmMapping": "Part_Design_Master"
+    },
+    {
+      "@type": "sysml:PartUsage",
+      "name": "shaft",
+      "status": "EBOM_APPROVED",
+      "plmMapping": "Part_Manufactured"
+    }
+  ],
+  "invariantsVerified": [
+    "INV-01",
+    "INV-02",
+    "INV-03",
+    "INV-04",
+    "INV-05"
+  ],
+  "compilerAudit": "ANTLR4_DETERMINISTIC_PASS"
+}
