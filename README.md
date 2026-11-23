@@ -2,7 +2,7 @@
 
 ### Plateforme d'Assistance à l'Ingénierie Système & Modélisation SysML v2
 
-> **Projet de Fin d'Études (PFE) — ENSAM de Meknès**  
+> **Projet métier — ENSAM de Meknès**  
 > **Département :** Génie Industriel & Productique (GIA / DTSI)  
 > **Auteures :** Samya Loukili & Kenza El Khaniri  
 > **Supervision :** Mme Ibtissam El-Hassani & M. Damien Motte  
