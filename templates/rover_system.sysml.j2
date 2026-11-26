@@ -1,0 +1,31 @@
+package '{{ content.project_name }}' {
+    doc /* Contract {{ content.contract_id }} (v{{ content.version }}) */
+
+    private import ScalarValues::*;
+
+{% for req in content.requirements %}
+    requirement def '{{ req.id }}' {
+        doc /* {{ req.name }}: {{ req.target }} */
+        attribute targetValue : Real = {{ req.numerical_val }};
+        attribute unit : String = "{{ req.unit }}";
+        attribute comparator : String = "{{ req.comparator }}";
+    }
+{% endfor %}
+
+{% for comp in content.components %}
+    part def {{ comp.name }} {
+        attribute category : String = "{{ comp.category }}";
+        attribute mass_kg : Real = {{ comp.mass_kg }};
+        attribute power_w : Real = {{ comp.power_w }};
+{% for port in comp.ports %}
+        {{ port.direction }} port {{ port.name }} : {{ port.domain }};
+{% endfor %}
+    }
+{% endfor %}
+
+    part def SystemAssembly {
+{% for comp in content.components %}
+        part {{ comp.name | lower }} : {{ comp.name }};
+{% endfor %}
+    }
+}
