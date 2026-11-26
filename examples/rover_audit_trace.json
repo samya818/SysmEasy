@@ -1,0 +1,86 @@
+{
+  "audit_version": "2.5",
+  "pipeline_run_id": "run-20261126-ensam-rover-001",
+  "project": "Rover Tout-Terrain",
+  "hash_formula": "sha256(prev_hash || step_order || agent || payload_summary)",
+  "input1_initial_sha256": "a5a57d9ce17308d9abc40b61bd632399bd105b3298add20a905b1f9795993948",
+  "input1_final_sha256": "1c8d8832059300e063a676c9b8b9475fca923d1ccee7527ec368f051afc43871",
+  "execution_profile": {
+    "compute_elapsed_ms": 6802.4,
+    "overhead_io_ms": 557.6,
+    "human_interaction_ms": 45000.0,
+    "total_replay_seconds": 7.36,
+    "total_interactive_seconds": 52.36,
+    "status": "CONFORME_APRES_ARBITRAGE"
+  },
+  "steps": [
+    {
+      "step_order": 1,
+      "agent": "Agent 1 (PyMuPDF Ingestion)",
+      "duration_ms": 340.0,
+      "payload_summary": "Extraction spatiale de 12 pages (0-indexed). 24 chunks validés par assertion NFKC.",
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry_hash": "2a73ea13bf0e1d728f1a8c258c096f9d97e18b4bfe5eae3f480c0efcc83e0bf1"
+    },
+    {
+      "step_order": 2,
+      "agent": "Agent 2 (Enquêteur & Guichet Unique)",
+      "agent_compute_ms": 2150.0,
+      "human_interaction_ms": 22000.0,
+      "total_step_ms": 24150.0,
+      "payload_summary": "Arbitrage tension 24V (DEC-01). Scellement initial : a5a57d9ce173...",
+      "prev_hash": "2a73ea13bf0e1d728f1a8c258c096f9d97e18b4bfe5eae3f480c0efcc83e0bf1",
+      "entry_hash": "95b8ca25f11f8ac8868c5fc5c31f6f2bf0dfc097db2debc4dca69c47b02edc18"
+    },
+    {
+      "step_order": 3,
+      "agent": "Agent 3 (Modélisateur Jinja2)",
+      "duration_ms": 1980.0,
+      "payload_summary": "Génération gabarit KerML avec clauses satisfy <req> by <part>.",
+      "prev_hash": "95b8ca25f11f8ac8868c5fc5c31f6f2bf0dfc097db2debc4dca69c47b02edc18",
+      "entry_hash": "d898db7429fe434c5da9a26ef71ba13a74fb9d201e9995a6cc3f9fada23aa4f8"
+    },
+    {
+      "step_order": 4,
+      "agent": "Agent 4 (Compilateur ANTLR4)",
+      "duration_ms": 38.0,
+      "payload_summary": "Parsing grammatical KerML (médiane 10 runs sur CPU i7-12700H). 0 erreur.",
+      "prev_hash": "d898db7429fe434c5da9a26ef71ba13a74fb9d201e9995a6cc3f9fada23aa4f8",
+      "entry_hash": "dc73bb64d2bf1e32761be54ef3af6c42e9c87d061bacdebe1ba56130ebf1e535"
+    },
+    {
+      "step_order": 5,
+      "agent": "Module 5 (Calculateur Déterministe Python + Z3)",
+      "agent_compute_ms": 12.0,
+      "human_interaction_ms": 23000.0,
+      "total_step_ms": 23012.0,
+      "payload_summary": "Puissance = 340 W. Pack 20Ah = 72.0 min (SOFT_WARNING). Arbitrage pack 28Ah (DEC-02) : autonomie = 100.8 min, masse = 22.80 kg. Re-scellement : 1c8d88320593...",
+      "prev_hash": "dc73bb64d2bf1e32761be54ef3af6c42e9c87d061bacdebe1ba56130ebf1e535",
+      "entry_hash": "f2948f1a8703856092363574296a54ae89dc97d25e578dba6bca10deb2a96e36"
+    },
+    {
+      "step_order": 6,
+      "agent": "Agents 6a / 6b (Double Oracle Découplé)",
+      "duration_ms": 1862.4,
+      "breakdown_ms": {
+        "m1_m5_symbolic_checks": 0.8,
+        "z3_m6_smt_solve": 11.2,
+        "causal_chain_audit": 0.4,
+        "total_agent_6a": 12.4,
+        "agent_6b_cognitif_iso29148": 1850.0
+      },
+      "payload_summary": "Agent 6a : PASS (12.4 ms). Agent 6b : CONFORME (ISO 29148).",
+      "prev_hash": "f2948f1a8703856092363574296a54ae89dc97d25e578dba6bca10deb2a96e36",
+      "entry_hash": "d5645dae5f03dec7288058f2df3fc155a486c307349a7a0edba63df1335d2489"
+    },
+    {
+      "step_order": 7,
+      "agent": "Agent 7 (Méta-Orchestrateur & Scellement)",
+      "duration_ms": 420.0,
+      "payload_summary": "Table de vérité validée. Génération rapport ReportLab et scellement linéaire.",
+      "prev_hash": "d5645dae5f03dec7288058f2df3fc155a486c307349a7a0edba63df1335d2489",
+      "entry_hash": "051f71f567bab710ededdd6efda5974e8273b689c1413905f13c7f1ae29a4296"
+    }
+  ],
+  "trace_sha256": "051f71f567bab710ededdd6efda5974e8273b689c1413905f13c7f1ae29a4296"
+}
