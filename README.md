@@ -1,119 +1,92 @@
-# SysmEasy 🚀
+# SysmEasy
 
-### Plateforme d'Assistance à l'Ingénierie Système & Modélisation SysML v2
+AI-driven pipeline for generating and evolving SysML v2 models from natural-language specifications.
 
-> **Projet de Fin d'Études (PFE) — ENSAM de Meknès**  
-> **Département :** Génie Industriel & Productique (GIA / DTSI)  
-> **Auteures :** Samya Loukili & Kenza El Khaniri  
-> **Supervision :** Mme Ibtissam El-Hassani & M. Damien Motte  
+**ENSAM Meknès — IATD 4th year — 2026**  
+*Samya Loukili & Kenza El Khaniri*
 
 ---
 
-## 📌 Présentation du Projet
+## Overview
 
-La transition vers l'ingénierie système basée sur les modèles (**MBSE — Model-Based Systems Engineering**) et l'adoption du standard **OMG SysML v2** constituent un enjeu majeur pour l'industrie moderne. Toutefois, un fossé important persiste entre :
-1. **Les cahiers des charges textuels industriels** (souvent denses, ambigus ou incomplets).
-2. **Les exigences de formalisation rigoureuse** requises par les compilateurs SysML v2 et les plateformes PLM.
-3. **Les besoins opérationnels des équipes métier non spécialistes** (qualité, industrialisation, achats, gestion de projet) qui doivent comprendre, auditer et valider les modèles sans se perdre dans la syntaxe formelle.
+SysmEasy transforms a structured natural-language specification (INPUT 1) into a formally verified SysML v2 model through an eight-stage pipeline:
 
-**SysmEasy** est une plateforme web conçue pour automatiser l'analyse sémantique des spécifications textuelles, générer des modèles SysML v2 formellement valides, et fournir une interface de revue ergonomique adaptée à la fois aux ingénieurs système et aux collaborateurs de terrain.
+1. **A1** — PDF extraction (PyMuPDF)
+2. **A2** — Requirement elicitation and COTS lookup
+3. **A3** — SysML v2 code generation (Jinja2 + LLM repair)
+4. **A4** — Syntactic validation (ANTLR4 grammar)
+5. **M5** — Physics and mass budget calculation (Python + Z3)
+6. **A6a** — Formal oracle (Z3 SMT)
+7. **A6b** — Cognitive review (ISO 29148 conformance via LLM)
+8. **A7** — Orchestrator and audit chain (RFC 8785 / JCS)
 
----
-
-## 🌟 Fonctionnalités Principales
-
-### 1. Vue Double-Persona (Métier vs Expert)
-* **Mode Métier (Simple) :** Traduit chaque règle, flux et bloc en français clair. L'employé accède à une fiche produit simplifiée, aux citations exactes du cahier des charges (`Page X, §Y`), et à une identification visuelle immédiate des **zones floues** et points d'arbitrage.
-* **Mode Expert (SysML v2 & Invariants) :** Donne accès au code source SysML v2 complet (syntaxe normalisée OMG KerML), au journal d'exécution ANTLR, aux graphes de connaissances (KG), et à l'état de validation des 5 Invariants formels.
-
-### 2. Moteur Déterministe des 5 Invariants Universels
-Chaque architecture générée est soumise à une vérification mathématique rigoureuse :
-* **INV-01 (Compatibilité des Domaines Physiques) :** $M_{\text{domaine}}(u, v) = 1$ (ex: électrique, mécanique, hydraulique, signal).
-* **INV-02 (Directionnalité des Ports) :** $T_{\text{dir}}(\text{out} \to \text{in})$ garantit l'orientation correcte des liaisons.
-* **INV-03 (Conformité des Item Flows & Unités SI) :** Validation dimensionnelle selon les standards internationaux.
-* **INV-04 (Clôture Temporelle des Boucles) :** Présence obligatoire de conditions d'arrêt explicites dans les `loop actions`.
-* **INV-05 (Clôture Topologique des Blocs) :** Détection des composants isolés et validation de leur statut (`INTENTIONALLY_STANDALONE` vs omission).
-
-### 3. Revue Collaborative & Gestion des Arbitrages
-* Validation en 1 clic (*« C'est exact »*, *« Modifier »*, *« Transférer aux Zones Floues »*).
-* Distinction explicite entre ce qui provient du texte d'origine et ce qui relève d'une recommandation d'ingénierie (ex. plage thermique recommandée selon norme ISO).
-* Suivi de l'avancement en temps réel avec barre de progression et filtres dynamiques.
-
-### 4. Interopérabilité PLM Réaliste (Sandbox Standalone)
-* Prise en charge des standards d'échange ouverts (**OMG Systems Modeling API & Services 1.0**, OSLC 3.0, JSON-LD).
-* Export de packages formels prêts pour l'intégration dans **Dassault Systèmes 3DEXPERIENCE**, **PTC Windchill** ou **Siemens Teamcenter**.
-
-### 5. Générateur de Rapports Exécutifs PDF
-* Génération de synthèses professionnelles de 4 pages calibrées (Page de garde, Vue Système Niv. 0, Blocs IBD Niv. 1, Déroulement Niv. 2, Plan d'Actions & Arbitrages pour réunion).
+Decision records (DEC-01, DEC-02) and all intermediate outputs are sealed with JCS-canonical SHA-256 hashes, forming a linear Merkle audit chain.
 
 ---
 
-## 🛠️ Architecture Technique
+## Repository layout
 
-* **Backend :** Python 3.10+ / FastAPI (REST API asynchrone, validation Pydantic).
-* **Moteur MBSE :** Moteur d'invariants formels déterministe (0-token, temps d'exécution < 1 ms).
-* **Génération Graphique & PDF :** Matplotlib (diagrammes vectoriels normalisés), ReportLab (composition de documents A4).
-* **Frontend :** Interface Single-Page réactive, Tailwind CSS, Lucide Icons, KaTeX pour le rendu des formules formelles.
-
----
-
-## 📂 Structure du Répertoire
-
-```text
-SysmEasy/
-├── server.py                   # Serveur d'API FastAPI et orchestration
-├── mbse_universal_engine.py    # Moteur de vérification formelle (5 Invariants)
-├── report_generator.py         # Moteur de génération des rapports PDF de synthèse
-├── requirements.txt            # Dépendances Python
-├── launch_interface.bat        # Script de démarrage rapide sous Windows
-├── README.md                   # Documentation du projet
-│
-└── static/                     # Assets statiques et interface web
-    ├── index.html              # Interface utilisateur (Double-Persona)
-    ├── battery_ibd_rendered.png
-    ├── diagram_action_flow.png
-    ├── diagram_charging_system_overview.png
-    ├── diagram_system_overview.png
-    ├── sysml_ibd_official_rendered.png
-    └── generated/              # Fichiers générés dynamiquement (JSON / PDF)
+```
+interface_agentic_sysml/
+├── sysmeasy/
+│   ├── extraction/       # A1 — PDF to structured dict
+│   ├── elicitation/      # A2 — NL requirement → typed objects
+│   ├── generation/       # A3 — Jinja2 templates + LLM repair
+│   ├── validation/       # A4 — ANTLR4 grammar checker
+│   ├── verification/     # M5 physics calculator + A6a Z3 oracle
+│   ├── review/           # A6b ISO 29148 cognitive review
+│   ├── orchestrator/     # A7 pipeline runner + audit chain
+│   └── contracts/        # INPUT 1 / INPUT 2 Pydantic schemas
+├── examples/             # Sealed JSON reference payloads
+├── tests/                # Pytest suite (unit + integration)
+├── docs/                 # Architecture specification (v2.5)
+├── scripts/              # Standalone utilities
+├── static/               # FastAPI static assets
+├── server.py             # FastAPI web interface
+└── pyproject.toml
 ```
 
 ---
 
-## 🚀 Installation & Démarrage
+## Quick start
 
-### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/samya818/SysmEasy.git
-cd SysmEasy
-```
+# Install in editable mode (Python 3.11+)
+pip install -e ".[dev]"
 
-### 2. Créer et activer un environnement virtuel
-```bash
-python -m venv venv
-# Sous Windows :
-venv\Scripts\activate
-# Sous Linux / macOS :
-source venv/bin/activate
-```
+# Run the full test suite
+pytest tests/ -v
 
-### 3. Installer les dépendances
-```bash
-pip install -r requirements.txt
-```
+# Verify audit chain integrity
+python scripts/verify_audit_chain.py
 
-### 4. Lancer la plateforme
-```bash
-python server.py
+# Start the web interface
+uvicorn server:app --reload
 ```
-*Ou directement en double-cliquant sur `launch_interface.bat` sous Windows.*
-
-L'interface est accessible à l'adresse : **[http://localhost:8000](http://localhost:8000)**.
 
 ---
 
-## 🎓 Cadre Académique & Mentions
+## Tests
 
-Ce projet s'inscrit dans le cadre du **Projet de Fin d'Études (PFE)** pour l'obtention du Diplôme d'Ingénieur d'État à l'**École Nationale Supérieure d'Arts et Métiers (ENSAM) de Meknès**.
+| Test file | What it covers |
+|---|---|
+| `test_rfc8785_conformance.py` | JCS canonical serialization against RFC 8785 Appendix vectors |
+| `test_input1_hash.py` | INPUT 1 v1.0 and v1.1 deterministic hash values |
+| `test_physics_sensitivity.py` | 340 W budget, DoD sweep, autonomy ≥ 90 min |
+| `test_physics_vs_llm.py` | M5 catches arithmetic errors the LLM would propagate |
+| `test_matrix_m5_causal_chain.py` | MUT-17 formal rejection by Z3 causal chain |
+| `test_reproducibility.py` | Deterministic re-hash and v1.0→v1.1 chain integrity |
 
-Nous tenons à exprimer notre profonde gratitude envers nos encadrants, **Mme Ibtissam El-Hassani** et **M. Damien Motte**, pour leur accompagnement scientifique, leurs conseils avisés et leur soutien tout au long de la réalisation de ce travail.
+All tests must pass before any merge to `main`.
+
+---
+
+## Reference hashes (INPUT 1 — Rover use case)
+
+| Artifact | JCS SHA-256 |
+|---|---|
+| `rover_v1.0.input1.json` | `1c8d8832059300e063a676c9b8b9475fca923d1ccee7527ec368f051afc43871` |
+| `rover_v1.1.input1.json` | `9157a8d34a07a958fd822f97b25254beeb1aaa69ac529792bbcf68cf557cb22c` |
+| `rover_audit_trace.json` | trace\_sha256 `051f71f567bab710ededdd6efda5974e8273b689c1413905f13c7f1ae29a4296` |
+
+These values are asserted in the test suite and must not change.
