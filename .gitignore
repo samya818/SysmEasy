@@ -1,31 +1,46 @@
-# Byte-compiled / optimized / DLL files
+# === Python ===
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
 
-# Environnements virtuels
+# === Virtual environments ===
 venv/
 .venv/
 env/
 ENV/
+.conda/
 
-# Logs et temporaires
-*.log
-*.tmp
-*.bak
+# === IDE / editors ===
+.idea/
+.vscode/
 *.swp
+*.swo
+.DS_Store
+Thumbs.db
 
-# Fichiers de test temporaires
-test_*.pdf
-test_*.png
-extract.py
+# === Testing ===
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.log
 
-# Sorties générées à la volée (on conserve les payloads d'exemple via .gitkeep)
+# === Generated outputs (keep example seeds via .gitkeep) ===
 static/generated/*.pdf
 static/generated/gen_*.png
 !static/generated/.gitkeep
 
-# IDEs
-.idea/
-.vscode/
-.DS_Store
+# === Temporary / scratch ===
+*.tmp
+*.bak
+scratch/
+
+# === OS ===
+desktop.ini
