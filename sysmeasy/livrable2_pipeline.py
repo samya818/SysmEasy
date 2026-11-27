@@ -113,10 +113,10 @@ def _compute_satisfy_recall(sysml_code: str, requirements: list[dict[str, Any]])
     return round((satisfied / len(requirements)) * 100.0, 1)
 
 
-def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False) -> Livrable2Result:
+def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_gemini_key: str | None = None) -> Livrable2Result:
     """Execute the clean 6-agent Livrable 2 flow on any raw specification prompt."""
     spec_text = _isolate_specification_section(prompt)
-    envelope = parse_cdc_to_input1(prompt, strict_llm=strict_llm)
+    envelope = parse_cdc_to_input1(prompt, strict_llm=strict_llm, override_gemini_key=override_gemini_key)
     content = envelope["content"]
 
     project_name: str = content["project_name"]

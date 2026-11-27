@@ -14,7 +14,7 @@ import hashlib
 from datetime import datetime
 from typing import Optional
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
@@ -22,6 +22,11 @@ from pydantic import BaseModel
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
+# On Vercel the filesystem is read-only except /tmp
+_IS_VERCEL = bool(os.environ.get("VERCEL"))
+GENERATED_DIR = "/tmp/sysmeasy_generated" if _IS_VERCEL else os.path.join(BASE_DIR, "static", "generated")
+os.makedirs(GENERATED_DIR, exist_ok=True)
 
 from mbse_universal_engine import MBSEUniversalInvariantEngine, DOMAINS_TAXONOMY
 from report_generator import generate_dynamic_pdf_report, generate_executive_pdf_report
@@ -44,7 +49,9 @@ app = FastAPI(
 )
 
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-GENERATED_DIR = os.path.join(STATIC_DIR, "generated")
+# On Vercel the filesystem is read-only except /tmp
+_IS_VERCEL = bool(os.environ.get("VERCEL"))
+GENERATED_DIR = "/tmp/sysmeasy_generated" if _IS_VERCEL else os.path.join(STATIC_DIR, "generated")
 os.makedirs(GENERATED_DIR, exist_ok=True)
 
 # État de la passerelle d'interopérabilité PLM (Standard OSLC / SysML v2 API)
@@ -82,8 +89,14 @@ class GeminiKeyRequest(BaseModel):
 async def get_gemini_key_status():
     _load_dotenv()
     key = os.environ.get("GEMINI_API_KEY", "").strip()
+    has_default = bool(key)
     masked = f"{key[:4]}…{key[-4:]}" if len(key) >= 10 else ("***" if key else "")
-    return JSONResponse({"configured": bool(key), "masked": masked})
+    return JSONResponse({
+        "configured": has_default,
+        "masked": masked,
+        "has_default": has_default,
+        "message": "Clé par défaut active" if has_default else "Aucune clé configurée",
+    })
 
 
 @app.post("/api/config/gemini-key")
@@ -249,7 +262,13 @@ def _render_dynamic_ibd(project_name: str, components: list[dict], physics, outp
     plt.close(fig)
 
 
-def build_canonical_model_from_input(prompt: str, file_name: str, file_content: str, view_level: str = "component") -> dict:
+def build_canonical_model_from_input(
+    prompt: str,
+    file_name: str,
+    file_content: str,
+    view_level: str = "component",
+    override_gemini_key: str | None = None,
+) -> dict:
     """
     Livrable 2 + Motte Methodology Pipeline: runs on every input (no hardcoded powertrain/battery fallback).
     """
@@ -259,8 +278,8 @@ def build_canonical_model_from_input(prompt: str, file_name: str, file_content: 
 
     strict_llm = not bool(os.environ.get("PYTEST_CURRENT_TEST"))
     try:
-        result = run_livrable2_pipeline(full_input, strict_llm=strict_llm)
-        plan = select_diagrams(result, full_input, strict_llm=strict_llm)
+        result = run_livrable2_pipeline(full_input, strict_llm=strict_llm, override_gemini_key=override_gemini_key)
+        plan = select_diagrams(result, full_input, strict_llm=strict_llm, override_gemini_key=override_gemini_key)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 
@@ -409,16 +428,18 @@ def render_braking_diagram(output_path: str):
 
 
 @app.post("/api/run-pipeline")
-async def run_pipeline_endpoint(req: PipelineRequest):
+async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
     """
     Point d'entrée universel du pipeline multi-agents.
     Reçoit n'importe quel besoin, extrait le graphe canonique,
     exécute l'audit déterministe à 0 token des 5 Invariants,
     et génère le bundle complet (Métier + Expert + Matrices).
     """
+    user_key = request.headers.get("x-gemini-api-key") or None
     # 1. Extraction et Modélisation Canonique (Agent 1)
     canonical = build_canonical_model_from_input(
-        req.prompt, req.attached_file_name, req.attached_file_content, req.view_level
+        req.prompt, req.attached_file_name, req.attached_file_content, req.view_level,
+        override_gemini_key=user_key,
     )
 
     # 2. Audit Déterministe des 5 Invariants (Agent 3)

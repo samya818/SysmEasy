@@ -1505,9 +1505,14 @@
             let backendData = null;
             let backendError = null;
             try {
+                const headers = {'Content-Type': 'application/json'};
+                const storedUserKey = localStorage.getItem('user_gemini_api_key');
+                if (storedUserKey) {
+                    headers['X-Gemini-Api-Key'] = storedUserKey;
+                }
                 const apiRes = await fetch('/api/run-pipeline', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: headers,
                     body: JSON.stringify({
                         prompt: text,
                         attached_file_name: fileName,
@@ -1845,11 +1850,18 @@
         async function refreshGeminiKeyStatus() {
             const badge = document.getElementById('gemini-key-status-badge');
             if (!badge) return;
+            const userKey = localStorage.getItem('user_gemini_api_key');
+            if (userKey) {
+                const masked = userKey.length >= 10 ? `${userKey.slice(0, 4)}…${userKey.slice(-4)}` : '***';
+                badge.textContent = `Personnalisée (${masked})`;
+                badge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 border border-blue-200";
+                return;
+            }
             try {
                 const res = await fetch('/api/config/gemini-key/status');
                 const data = await res.json();
                 if (data.configured) {
-                    badge.textContent = `Active (${data.masked})`;
+                    badge.textContent = `Par défaut (${data.masked})`;
                     badge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200";
                 } else {
                     badge.textContent = "Non configurée";
@@ -1867,9 +1879,14 @@
             const fb = document.getElementById('gemini-key-feedback');
             const apiKey = (input?.value || '').trim();
             if (!apiKey) {
-                fb.textContent = "Veuillez coller une clé API Gemini valide.";
-                fb.className = "text-[11px] text-red-600";
+                localStorage.removeItem('user_gemini_api_key');
+                fb.textContent = "Clé personnalisée supprimée. Utilisation de la clé par défaut.";
+                fb.className = "text-[11px] text-amber-600 font-medium";
                 fb.classList.remove('hidden');
+                await refreshGeminiKeyStatus();
+                setTimeout(() => {
+                    document.getElementById('gemini-key-panel')?.classList.add('hidden');
+                }, 1400);
                 return;
             }
             btn.disabled = true;
@@ -1883,14 +1900,15 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || "Clé invalide");
-                fb.textContent = `✓ ${data.message}`;
+                localStorage.setItem('user_gemini_api_key', apiKey);
+                fb.textContent = `✓ Clé enregistrée dans votre navigateur (${data.active_model || 'Gemini'})`;
                 fb.className = "text-[11px] text-emerald-600 font-medium";
                 fb.classList.remove('hidden');
                 input.value = "";
                 await refreshGeminiKeyStatus();
                 setTimeout(() => {
                     document.getElementById('gemini-key-panel')?.classList.add('hidden');
-                }, 1200);
+                }, 1400);
             } catch (err) {
                 fb.textContent = `✗ ${err.message}`;
                 fb.className = "text-[11px] text-red-600";

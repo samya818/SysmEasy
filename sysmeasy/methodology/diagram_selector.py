@@ -198,9 +198,13 @@ def select_diagrams(
     provider: LLMProvider | None = None,
     *,
     strict_llm: bool = False,
+    override_gemini_key: str | None = None,
 ) -> DiagramPlan:
     """Ask the LLM (or Motte-rule fallback if strict_llm=False) which 2-4 diagrams to render."""
-    active_provider = provider or detect_env_llm_provider()
+    if override_gemini_key and provider is None:
+        active_provider = detect_env_llm_provider(override_gemini_key=override_gemini_key)
+    else:
+        active_provider = provider or detect_env_llm_provider()
     if active_provider is None:
         if strict_llm:
             raise RuntimeError("Aucune clé API LLM configurée pour le choix des diagrammes.")

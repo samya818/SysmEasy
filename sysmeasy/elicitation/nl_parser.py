@@ -199,8 +199,12 @@ def parse_cdc_to_input1(
     project_name: str | None = None,
     provider: LLMProvider | None = None,
     strict_llm: bool = False,
+    override_gemini_key: str | None = None,
 ) -> dict[str, Any]:
     """Parse a raw engineering specification into a JCS-sealed INPUT 1 payload."""
+    if override_gemini_key and provider is None:
+        from sysmeasy.contracts.llm_provider import detect_env_llm_provider
+        provider = detect_env_llm_provider(override_gemini_key=override_gemini_key)
     prompt = _isolate_specification_section(prompt)
     title_match = re.search(r'(?:Robot|Système|Projet|Projecteur|DataShow|Drone|Spécification)[^"\n]*?"([^"]+)"', prompt, re.IGNORECASE)
     if not title_match:

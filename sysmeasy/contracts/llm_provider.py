@@ -139,9 +139,23 @@ class EnvChatProvider:
         raise last_exc or RuntimeError("Aucun modèle LLM disponible.")
 
 
-def detect_env_llm_provider() -> LLMProvider | None:
-    """Return an LLMProvider if OPENAI_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY is set."""
+def detect_env_llm_provider(override_gemini_key: str | None = None) -> LLMProvider | None:
+    """Return an LLMProvider.
+
+    Priority order:
+    1. ``override_gemini_key`` – per-request key supplied by the user via the UI (X-Gemini-Api-Key header).
+    2. Environment variables: OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY (default key set by the platform owner).
+    """
     _load_dotenv()
+    if override_gemini_key and override_gemini_key.strip():
+        key = override_gemini_key.strip()
+        models = _resolve_gemini_models(key)
+        return EnvChatProvider(
+            key,
+            "https://generativelanguage.googleapis.com/v1beta/openai",
+            models[0],
+            fallback_models=models[1:],
+        )
     if key := os.environ.get("OPENAI_API_KEY"):
         return EnvChatProvider(
             key,
