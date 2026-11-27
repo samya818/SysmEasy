@@ -27,22 +27,22 @@ Decision records (DEC-01, DEC-02) and all intermediate outputs are sealed with J
 ## Repository layout
 
 ```
-interface_agentic_sysml/
+sysmeasy/
 ├── sysmeasy/
-│   ├── extraction/       # A1 — PDF to structured dict
-│   ├── elicitation/      # A2 — NL requirement → typed objects
-│   ├── generation/       # A3 — Jinja2 templates + LLM repair
-│   ├── validation/       # A4 — ANTLR4 grammar checker
-│   ├── verification/     # M5 physics calculator + A6a Z3 oracle
-│   ├── review/           # A6b ISO 29148 cognitive review
-│   ├── orchestrator/     # A7 pipeline runner + audit chain
-│   └── contracts/        # INPUT 1 / INPUT 2 Pydantic schemas
-├── examples/             # Sealed JSON reference payloads
-├── tests/                # Pytest suite (unit + integration)
-├── docs/                 # Architecture specification (v2.5)
-├── scripts/              # Standalone utilities
-├── static/               # FastAPI static assets
-├── server.py             # FastAPI web interface
+│   ├── extraction/       # A1 — PDF and text ingestion
+│   ├── elicitation/      # A2 — NL requirement → INPUT 1 contract (JCS RFC 8785)
+│   ├── generation/       # A3 — SysML v2 modeling & active LLM repair loop
+│   ├── validation/       # A4 — Fast ANTLR4 syntax checker (< 50ms)
+│   ├── verification/     # A5 — Consultative physics balance (mass, power, autonomy)
+│   ├── review/           # A6 — Semantic satisfaction recall (>=95%) & cognitive review
+│   ├── orchestrator/     # A7 — Two-level memory & lucid stopping orchestrator
+│   ├── methodology/      # MagicGrid, HarmonySE, ARCADIA diagram selector & ELK layout
+│   └── contracts/        # Pydantic schemas, JCS seal & fast LLM providers
+├── examples/             # Reference payloads & specifications
+├── tests/                # Automated test suite (52+ passing unit & integration tests)
+├── static/               # Web application assets
+├── templates/            # SysML v2 Jinja2 reference templates
+├── server.py             # FastAPI web application server
 └── pyproject.toml
 ```
 
