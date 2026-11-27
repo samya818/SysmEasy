@@ -1451,9 +1451,22 @@
             let fileContent = "";
             if (currentAttachedFile) {
                 try {
-                    fileContent = await currentAttachedFile.text();
+                    const isBinary = fileName.toLowerCase().endsWith('.pdf') || 
+                                     fileName.toLowerCase().endsWith('.docx') || 
+                                     fileName.toLowerCase().endsWith('.doc');
+                    if (isBinary) {
+                        const buffer = await currentAttachedFile.arrayBuffer();
+                        const bytes = new Uint8Array(buffer);
+                        let binary = '';
+                        for (let i = 0; i < bytes.byteLength; i++) {
+                            binary += String.fromCharCode(bytes[i]);
+                        }
+                        fileContent = btoa(binary);
+                    } else {
+                        fileContent = await currentAttachedFile.text();
+                    }
                 } catch(err) {
-                    fileContent = `File: ${fileName} attached.`;
+                    fileContent = "";
                 }
             }
 

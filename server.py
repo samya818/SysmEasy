@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import json
+import base64
 import hashlib
 from datetime import datetime
 from typing import Optional
@@ -22,6 +23,8 @@ from pydantic import BaseModel
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
+from sysmeasy.extraction.pdf_extractor import extract_pdf_spans, ExtractionError
 
 # On Vercel the filesystem is read-only except /tmp
 _IS_VERCEL = bool(os.environ.get("VERCEL"))
@@ -272,7 +275,20 @@ def build_canonical_model_from_input(
     """
     Livrable 2 + Motte Methodology Pipeline: runs on every input (no hardcoded powertrain/battery fallback).
     """
-    full_input = f"{prompt}\n{file_content}".strip()
+    extracted_text = ""
+    if file_content and file_name.lower().endswith(".pdf"):
+        # Handle PDF attachment: either base64-encoded or raw
+        try:
+            pdf_bytes = base64.b64decode(file_content)
+            spans = extract_pdf_spans(pdf_bytes)
+            extracted_text = "\n".join(s.text for s in spans if s.text.strip())
+        except Exception:
+            # Fallback if text was sent directly
+            extracted_text = file_content
+    elif file_content:
+        extracted_text = file_content
+
+    full_input = f"{prompt}\n{extracted_text}".strip()
     if not full_input:
         raise HTTPException(status_code=400, detail="Veuillez saisir un cahier des charges ou joindre un document.")
 
