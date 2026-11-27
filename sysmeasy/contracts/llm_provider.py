@@ -213,11 +213,15 @@ def set_gemini_api_key(api_key: str) -> list[str]:
     _CACHED_GEMINI_MODELS = None
     _LAST_WORKING_GEMINI_MODEL = None
 
-    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-    lines: list[str] = []
-    if env_path.is_file():
-        lines = [ln for ln in env_path.read_text(encoding="utf-8").splitlines() if not ln.strip().startswith("GEMINI_API_KEY=")]
-    lines.append(f"GEMINI_API_KEY={clean_key}")
-    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if not os.environ.get("VERCEL"):
+        try:
+            env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+            lines: list[str] = []
+            if env_path.is_file():
+                lines = [ln for ln in env_path.read_text(encoding="utf-8").splitlines() if not ln.strip().startswith("GEMINI_API_KEY=")]
+            lines.append(f"GEMINI_API_KEY={clean_key}")
+            env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        except OSError:
+            pass  # Read-only filesystem (e.g. serverless); key remains active in memory & browser localStorage
 
     return _resolve_gemini_models(clean_key)
