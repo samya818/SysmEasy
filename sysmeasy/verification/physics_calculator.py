@@ -1,7 +1,8 @@
-"""Deterministic physics and budget calculator (Module 5).
+"""Deterministic physics and budget calculator (Module 5 — Agent consultatif).
 
 Computes total mass, power consumption, and continuous autonomy from
-an INPUT 1 component list, and checks constraint satisfiability with Z3.
+an INPUT 1 component list, and checks budget constraints with simple
+Python comparisons (Soft Warning, non-blocking — Livrable 2 §6).
 """
 
 from __future__ import annotations
@@ -9,12 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
-import z3
-
 
 @dataclass(frozen=True)
 class PhysicsReport:
-    """Result of deterministic physics and Z3 constraint evaluation."""
+    """Result of deterministic physics constraint evaluation."""
 
     total_mass_kg: float
     total_power_w: float
@@ -22,7 +21,7 @@ class PhysicsReport:
     autonomy_min: float
     mass_margin_kg: float
     autonomy_margin_min: float
-    z3_satisfiable: bool
+    budget_feasible: bool  # renamed from z3_satisfiable — simple Python comparison
     status: str
     warnings: tuple[str, ...] = field(default_factory=tuple)
 
@@ -53,23 +52,22 @@ def compute_autonomy_minutes(
     return (usable_wh / power_load_w) * 60.0
 
 
-def check_z3_feasibility(
+def check_budget_feasibility(
     total_mass_kg: float,
     max_mass_kg: float,
     autonomy_min: float,
     min_autonomy_min: float,
 ) -> bool:
-    """Verify mass and autonomy inequalities using Z3 real arithmetic."""
-    solver = z3.Solver()
-    mass = z3.Real("total_mass_kg")
-    autonomy = z3.Real("autonomy_min")
+    """Check mass and autonomy budget constraints with simple Python comparisons.
 
-    solver.add(mass == z3.RealVal(str(round(total_mass_kg, 6))))
-    solver.add(autonomy == z3.RealVal(str(round(autonomy_min, 6))))
-    solver.add(mass <= z3.RealVal(str(max_mass_kg)))
-    solver.add(autonomy >= z3.RealVal(str(min_autonomy_min)))
-
-    return solver.check() == z3.sat
+    Replaces the former Z3 SMT solver call — the constraints are plain
+    inequalities (mass <= max, autonomy >= min) that need no formal solver.
+    Agent 5 is purely advisory: a False result emits a Soft Warning, never
+    blocks the pipeline (Livrable 2 §6 and §8).
+    """
+    mass_ok = total_mass_kg <= max_mass_kg
+    autonomy_ok = autonomy_min >= min_autonomy_min
+    return mass_ok and autonomy_ok
 
 
 def evaluate_system_budgets(
@@ -107,7 +105,7 @@ def evaluate_system_budgets(
             f"Mass budget exceeded: {total_mass:.2f} kg > {max_mass_kg:.2f} kg"
         )
 
-    sat = check_z3_feasibility(
+    sat = check_budget_feasibility(
         total_mass,
         max_mass_kg,
         autonomy if total_power > 0.0 else min_autonomy_min,
@@ -122,7 +120,7 @@ def evaluate_system_budgets(
         autonomy_min=round(autonomy, 4),
         mass_margin_kg=mass_margin,
         autonomy_margin_min=autonomy_margin,
-        z3_satisfiable=sat,
+        budget_feasible=sat,
         status=status,
         warnings=tuple(warnings),
     )

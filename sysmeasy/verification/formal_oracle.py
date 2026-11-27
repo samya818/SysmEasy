@@ -132,7 +132,9 @@ def evaluate_formal_oracle(
                 m5_ok = False
                 violations.append(f"M5: Active component '{comp['name']}' reports <= 0 W")
 
-    # M6: Formal Z3 budget satisfiability
+    # M6: Budget satisfiability (mass <= max AND autonomy >= min)
+    # Agent 5 est purement consultatif : un échec ici émet un Soft Warning
+    # sans bloquer le pipeline (Livrable 2 §6).
     physics = evaluate_system_budgets(
         content.get("components", []),
         bus_voltage_v=bus_voltage_v,
@@ -141,7 +143,7 @@ def evaluate_formal_oracle(
         max_mass_kg=max_mass_kg,
         min_autonomy_min=min_autonomy_min,
     )
-    m6_ok = physics.z3_satisfiable
+    m6_ok = physics.budget_feasible
     if not m6_ok:
         violations.extend(f"M6: {w}" for w in physics.warnings)
 

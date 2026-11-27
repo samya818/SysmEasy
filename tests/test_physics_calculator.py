@@ -28,7 +28,7 @@ def test_rover_v10_20ah_triggers_soft_warning():
     assert report.total_power_w == 340.0
     assert report.usable_energy_wh == 408.0
     assert round(report.autonomy_min, 1) == 72.0
-    assert report.z3_satisfiable is False
+    assert report.budget_feasible is False
     assert report.status == "SOFT_WARNING"
     assert len(report.warnings) == 1
 
@@ -47,7 +47,7 @@ def test_rover_v10_28ah_satisfies_all_budgets():
     assert report.total_power_w == 340.0
     assert round(report.autonomy_min, 1) == 100.8
     assert report.mass_margin_kg == 2.20
-    assert report.z3_satisfiable is True
+    assert report.budget_feasible is True
     assert report.status == "OK"
     assert report.warnings == ()
 
@@ -64,7 +64,7 @@ def test_rover_v11_28ah_mass_reduction():
     )
     assert report.total_mass_kg == 21.20
     assert report.mass_margin_kg == 0.80
-    assert report.z3_satisfiable is True
+    assert report.budget_feasible is True
     assert report.status == "OK"
 
 
