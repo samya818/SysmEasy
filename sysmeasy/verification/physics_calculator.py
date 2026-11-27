@@ -86,22 +86,33 @@ def evaluate_system_budgets(
     total_power = compute_total_power(components)
     nominal_wh = bus_voltage_v * battery_capacity_ah
     usable_wh = nominal_wh * dod
-    autonomy = compute_autonomy_minutes(nominal_wh, total_power, dod)
-
-    mass_margin = round(max_mass_kg - total_mass, 4)
-    autonomy_margin = round(autonomy - min_autonomy_min, 4)
 
     warnings: list[str] = []
+    if total_power > 0.0:
+        autonomy = compute_autonomy_minutes(nominal_wh, total_power, dod)
+        autonomy_margin = round(autonomy - min_autonomy_min, 4)
+        if autonomy_margin < 0.0:
+            warnings.append(
+                f"Autonomy below target: {autonomy:.1f} min < {min_autonomy_min:.1f} min"
+            )
+    else:
+        # Power draw not itemized or AC-mains system: skip division by zero, check mass only.
+        autonomy = 0.0
+        autonomy_margin = 0.0
+        warnings.append("Total component power_w is 0 W (AC mains or unitemized load): autonomy check skipped.")
+
+    mass_margin = round(max_mass_kg - total_mass, 4)
     if mass_margin < 0.0:
         warnings.append(
             f"Mass budget exceeded: {total_mass:.2f} kg > {max_mass_kg:.2f} kg"
         )
-    if autonomy_margin < 0.0:
-        warnings.append(
-            f"Autonomy below target: {autonomy:.1f} min < {min_autonomy_min:.1f} min"
-        )
 
-    sat = check_z3_feasibility(total_mass, max_mass_kg, autonomy, min_autonomy_min)
+    sat = check_z3_feasibility(
+        total_mass,
+        max_mass_kg,
+        autonomy if total_power > 0.0 else min_autonomy_min,
+        min_autonomy_min,
+    )
     status = "OK" if (sat and not warnings) else "SOFT_WARNING"
 
     return PhysicsReport(

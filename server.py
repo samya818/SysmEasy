@@ -25,6 +25,12 @@ if BASE_DIR not in sys.path:
 
 from mbse_universal_engine import MBSEUniversalInvariantEngine, DOMAINS_TAXONOMY
 from report_generator import generate_executive_pdf_report
+from sysmeasy.contracts.jcs_seal import ContractSealError, verify_sealed_input1
+from sysmeasy.generation.modeling_agent import ModelingError, generate_with_repair
+from sysmeasy.orchestrator.audit_logger import AuditLogger
+from sysmeasy.validation.antlr_compiler import check_sysml_syntax
+from sysmeasy.verification.formal_oracle import evaluate_formal_oracle
+from sysmeasy.verification.physics_calculator import evaluate_system_budgets
 
 import matplotlib
 matplotlib.use('Agg')
@@ -656,6 +662,73 @@ async def run_pipeline_endpoint(req: PipelineRequest):
     }
 
     return JSONResponse(response_payload)
+
+
+class Input1VerifyRequest(BaseModel):
+    sealed_input1: dict
+    bus_voltage_v: float = 24.0
+    battery_capacity_ah: float = 28.0
+    dod: float = 0.85
+    max_mass_kg: float = 25.0
+    min_autonomy_min: float = 90.0
+
+
+@app.post("/api/v2/verify-input1")
+async def verify_input1_endpoint(req: Input1VerifyRequest):
+    """Run deterministic V2 verification (JCS seal, Jinja2+syntax, M5 physics, M1-M6 formal oracle)."""
+    try:
+        input1_hash = verify_sealed_input1(req.sealed_input1)
+    except ContractSealError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    try:
+        sysml_code, attempts = generate_with_repair(req.sealed_input1, check_sysml_syntax)
+    except ModelingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    components = req.sealed_input1["content"].get("components", [])
+    physics = evaluate_system_budgets(
+        components,
+        bus_voltage_v=req.bus_voltage_v,
+        battery_capacity_ah=req.battery_capacity_ah,
+        dod=req.dod,
+        max_mass_kg=req.max_mass_kg,
+        min_autonomy_min=req.min_autonomy_min,
+    )
+    formal = evaluate_formal_oracle(
+        req.sealed_input1,
+        sysml_code,
+        bus_voltage_v=req.bus_voltage_v,
+        battery_capacity_ah=req.battery_capacity_ah,
+        dod=req.dod,
+        max_mass_kg=req.max_mass_kg,
+        min_autonomy_min=req.min_autonomy_min,
+    )
+
+    logger = AuditLogger()
+    logger.record("A2_SEAL", f"input1_sha256={input1_hash}")
+    logger.record("A3_A4_MODEL", f"attempts={attempts}, lines={len(sysml_code.splitlines())}")
+    logger.record("M5_PHYSICS", f"status={physics.status}, autonomy={physics.autonomy_min}")
+    logger.record("A6a_FORMAL", f"verdict={formal.verdict}, matrices={formal.matrix_results}")
+
+    return JSONResponse({
+        "status": "PASS" if formal.passed else "FAIL",
+        "input1_sha256": input1_hash,
+        "sysml_code": sysml_code,
+        "physics": {
+            "total_mass_kg": physics.total_mass_kg,
+            "total_power_w": physics.total_power_w,
+            "autonomy_min": physics.autonomy_min,
+            "status": physics.status,
+            "warnings": list(physics.warnings),
+        },
+        "formal": {
+            "verdict": formal.verdict,
+            "matrix_results": formal.matrix_results,
+            "violations": list(formal.violations),
+        },
+        "audit_trace": logger.to_trace(str(req.sealed_input1["content"]["contract_id"])),
+    })
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
