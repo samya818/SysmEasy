@@ -132,3 +132,29 @@ def test_agent1_rag_pointers_and_agent2_incose_rules():
     assert len(pointers) >= 1
     assert any("Annexe" in p for p in pointers)
 
+
+def test_hybrid_dossier_preserves_natural_language_in_sysml_doc():
+    """Verify Livrable 2 Choix 4: natural-language context survives into INPUT 1 and SysML doc."""
+    from sysmeasy.elicitation.nl_parser import parse_cdc_to_input1
+    from sysmeasy.generation.modeling_agent import render_sysml_from_input1
+    from sysmeasy.validation.antlr_compiler import check_sysml_syntax
+
+    cdc = (
+        'Système "DesertRover".\n'
+        "Mission : Le robot doit rouler dans le désert avec de la poussière fine et de fortes chaleurs.\n"
+        "Environnement : Moteurs étanches exigés pour résister au sable.\n"
+        "- REQ-01 : Masse totale <= 25 kg.\n"
+        "- Moteur : masse 3.0 kg, puissance 150 W.\n"
+    )
+    env = parse_cdc_to_input1(cdc)
+    content = env["content"]
+    assert "désert" in content["conops"].lower()
+    assert "poussière" in content["operational_context"].lower()
+
+    sysml = render_sysml_from_input1(env)
+    assert "désert" in sysml.lower()
+    assert "Contexte :" in sysml
+    ok, diags = check_sysml_syntax(sysml)
+    assert ok, f"Syntax check failed: {diags}"
+
+

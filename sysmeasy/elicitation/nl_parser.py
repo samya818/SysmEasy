@@ -137,11 +137,14 @@ Règles critiques :
 4. Un code normatif ou de classification (ex: "IP54", "IP67", "ISO ...") N'EST PAS une grandeur numérique : mets "numerical_val": 0.0, "unit": "spec", "target": "Protection IP54".
 5. Chaque élément de "components" doit être un vrai sous-système matériel ou logiciel avec ses propres ports ("power_out"|"power_in"|"data_out"|"data_in").
 6. Remplis "connections" avec les flux explicites entre composants ({"from": "NomCompA", "to": "NomCompB", "domain": "electrical|data|mechanical", "label": "flux"}).
+7. "conops" doit être un texte libre de 2 à 4 phrases décrivant : la mission du système, son environnement opérationnel, les conditions d'usage et les contraintes de contexte qui ne peuvent pas être réduites à un chiffre (ex : terrain, climat, utilisateur cible). Ce champ est OBLIGATOIRE et alimente les balises doc du code SysML v2.
+8. "operational_context" est un résumé libre (1-3 phrases) des contraintes qualitatives irréductibles à un JSON : matériaux imposés, fournisseurs préférés, normes de certification, conditions environnementales particulières, contraintes réglementaires.
 
 Format JSON attendu :
 {
   "project_name": "...",
-  "conops": "1 phrase résumant la mission",
+  "conops": "2-4 phrases : mission, environnement, conditions d'usage, contraintes contextuelles non chiffrables",
+  "operational_context": "1-3 phrases : contraintes qualitatives irréductibles (matériaux, fournisseurs, normes, réglementation)",
   "physics_params": {"bus_voltage_v": 24.0, "battery_capacity_ah": 20.0, "dod": 0.85},
   "requirements": [{"id": "REQ-01", "name": "...", "target": "...", "numerical_val": 0.0, "unit": "...", "comparator": "<=|>=|=="}],
   "components": [{"label": "...", "category": "part|actuator|sensor|controller", "mass_kg": 0.0, "power_w": 0.0, "ports": [{"name": "power_in", "direction": "in", "domain": "electrical", "unit": "V"}]}],
@@ -278,6 +281,42 @@ def _extract_rag_pointers(prompt: str) -> list[str]:
     return pointers[:4]
 
 
+def _extract_hybrid_text(prompt: str, resolved_name: str) -> tuple[str, str]:
+    """Extract natural-language ConOps and qualitative operational context (Livrable 2, Choix 4).
+
+    Preserves non-numeric context (environment, mission, qualitative constraints) that cannot
+    be reduced to a rigid JSON table, so Agent 3 can populate SysML v2 `doc /* ... */` tags.
+    """
+    qualitative_kw = (
+        "mission", "objectif", "contexte", "environnement", "désert", "poussière",
+        "température", "chaleur", "froid", "pluie", "étanche", "norme", "iso",
+        "fournisseur", "client", "terrain", "extérieur", "intérieur", "sécurité",
+        "doit ", "opérer", "fonctionner",
+    )
+    prose_sentences: list[str] = []
+    qualitative_sentences: list[str] = []
+    for raw_line in prompt.splitlines():
+        line = raw_line.strip().lstrip("-*•").strip()
+        if not line or len(line) < 15:
+            continue
+        if re.match(r"^REQ-\d+\s*[:\-–]", line, re.IGNORECASE):
+            continue
+        # Skip pure component spec bullets (e.g. "Moteur : 2.5 kg, 120 W") unless they carry qualitative context
+        has_qual = any(k in line.lower() for k in qualitative_kw)
+        is_pure_comp = bool(_COMP_LINE_RE.match(raw_line)) and (_MASS_RE.search(line) or _POWER_RE.search(line))
+        if is_pure_comp and not has_qual:
+            continue
+        prose_sentences.append(line)
+        if has_qual:
+            qualitative_sentences.append(line)
+
+    conops = " ".join(prose_sentences[:3]).strip()
+    if not conops:
+        conops = f"Système {resolved_name} formalisé d'après le besoin exprimé."
+    operational_context = " ".join(qualitative_sentences[:3]).strip()
+    return conops[:500], operational_context[:500]
+
+
 def _safe_float(val: Any, default: float = 0.0) -> float:
     if val is None or val == "":
         return default
@@ -349,6 +388,7 @@ def parse_cdc_to_input1(
             "contract_id": f"CTR-{_slugify_part_name(resolved_name).upper()[:8]}-2026",
             "project_name": resolved_name,
             "conops": str(llm_data.get("conops") or ""),
+            "operational_context": str(llm_data.get("operational_context") or ""),
             "version": "1.0",
             "parent_sha256": None,
             "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -542,10 +582,13 @@ def parse_cdc_to_input1(
     ambiguities += _detect_incose_vague_terms(prompt, requirements)
     rag_ptrs = _extract_rag_pointers(prompt)
 
+    conops_text, op_context_text = _extract_hybrid_text(prompt, resolved_name)
+
     content = {
         "contract_id": f"CTR-{_slugify_part_name(resolved_name).upper()[:8]}-2026",
         "project_name": resolved_name,
-        "conops": f"Système {resolved_name} formalisé d'après le besoin exprimé.",
+        "conops": conops_text,
+        "operational_context": op_context_text,
         "version": "1.0",
         "parent_sha256": None,
         "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

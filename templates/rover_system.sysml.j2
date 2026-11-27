@@ -1,5 +1,5 @@
 package '{{ content.project_name }}' {
-    doc /* Contract {{ content.contract_id }} (v{{ content.version }}) */
+    doc /* Contract {{ content.contract_id }} (v{{ content.version }}){% if content.conops is defined and content.conops %} | ConOps : {{ content.conops | replace('*/', '* /') | replace('\n', ' ') }}{% endif %}{% if content.operational_context is defined and content.operational_context %} | Contexte : {{ content.operational_context | replace('*/', '* /') | replace('\n', ' ') }}{% endif %} */
 
     private import ScalarValues::*;
 
