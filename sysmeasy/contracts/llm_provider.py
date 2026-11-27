@@ -73,8 +73,8 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
                 nums = tuple(int(n) for n in re.findall(r"\d+", name)) or (0,)
                 return (is_stable, is_flash, nums)
             ordered = sorted(candidates, key=_score, reverse=True)
-            # Prioritize proven fast Flash models (2.5-flash, 2.5-flash-lite, 2.0-flash)
-            for preferred_m in reversed(["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]):
+            # Prioritize proven fast Flash models (3.5-flash-lite, 3.5-flash, 3.6-flash)
+            for preferred_m in reversed(["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]):
                 if preferred_m in ordered:
                     ordered.remove(preferred_m)
                     ordered.insert(0, preferred_m)
@@ -82,7 +82,7 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
             return _CACHED_GEMINI_MODELS
     except Exception:
         pass
-    return [os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")]
+    return [os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")]
 
 
 class EnvChatProvider:
@@ -111,8 +111,6 @@ class EnvChatProvider:
                     {"role": "user", "content": user_prompt},
                 ],
             }
-            if "generativelanguage.googleapis.com" in self.base_url and "flash" in mdl:
-                body["reasoning_effort"] = "none"
             payload = json.dumps(body).encode("utf-8")
             req = urllib.request.Request(
                 f"{self.base_url}/chat/completions",
@@ -124,7 +122,7 @@ class EnvChatProvider:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=20) as resp:
+                with urllib.request.urlopen(req, timeout=10) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                 _LAST_WORKING_GEMINI_MODEL = mdl
                 return LLMResponse(content=data["choices"][0]["message"]["content"], model=mdl)
