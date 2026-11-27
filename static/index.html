@@ -43,41 +43,45 @@
     <!-- ============================================================== -->
     <!-- TOP HEADER                                                     -->
     <!-- ============================================================== -->
-    <header class="h-16 bg-white border-b border-slate-100 px-6 flex items-center justify-between shrink-0 z-10 shadow-sm">
-        <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+    <header class="min-h-14 sm:h-16 bg-white border-b border-slate-100 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between shrink-0 z-20 shadow-sm gap-2">
+        <div class="flex items-center gap-2.5 sm:gap-3.5">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
                 <i data-lucide="cpu" class="w-5 h-5"></i>
             </div>
             <div>
-                <div class="flex items-center gap-2.5">
-                    <h1 class="text-sm font-bold text-slate-900 tracking-tight">Système Multi-Agents IA — SysML v2</h1>
-                    <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">SysmEasy</h1>
+                    <span class="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60">
                         ENSAM Meknès
                     </span>
                 </div>
-                <p class="text-[11px] text-slate-500 font-normal">Architecture Agentic AI (4 Agents Spécialisés &amp; Vérificateur Hybride)</p>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 font-normal hidden sm:block">Architecture Agentic AI — SysML v2</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-3 ml-auto sm:ml-0">
             <!-- DUAL-PERSONA SWITCHER (VUE MÉTIER VS VUE EXPERT) -->
-            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button onclick="setPersonaMode('metier')" id="persona-btn-metier" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-blue-700 shadow-sm transition flex items-center gap-1.5">
+            <div class="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200">
+                <button onclick="setPersonaMode('metier')" id="persona-btn-metier" class="px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-white text-blue-700 shadow-sm transition flex items-center gap-1 sm:gap-1.5">
                     <i data-lucide="briefcase" class="w-3.5 h-3.5 text-blue-600"></i>
-                    <span>Vue Métier (Simple)</span>
+                    <span class="hidden xs:inline">Métier</span>
+                    <span class="hidden md:inline">(Simple)</span>
                 </button>
-                <button onclick="setPersonaMode('expert')" id="persona-btn-expert" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5">
+                <button onclick="setPersonaMode('expert')" id="persona-btn-expert" class="px-2 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-medium text-slate-500 hover:text-slate-800 transition flex items-center gap-1 sm:gap-1.5">
                     <i data-lucide="cpu" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Vue Expert (SysML v2)</span>
+                    <span class="hidden xs:inline">Expert</span>
+                    <span class="hidden md:inline">(SysML v2)</span>
                 </button>
             </div>
 
-            <button onclick="resetConversation()" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition flex items-center gap-1.5">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-500"></i>
-                <span>Réinitialiser</span>
+            <!-- BOUTON MOBILE TOGGLE SIDEBAR (DRAWER) -->
+            <button onclick="toggleMobileSidebar()" id="mobile-sidebar-btn" class="lg:hidden p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" title="Ouvrir le panneau technique">
+                <i data-lucide="panel-right" class="w-4 h-4"></i>
             </button>
-            <button onclick="switchTab('code')" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-lg border border-slate-200 transition" title="Inspecter le code">
-                <i data-lucide="file-text" class="w-4 h-4"></i>
+
+            <button onclick="resetConversation()" class="p-2 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition flex items-center gap-1.5" title="Réinitialiser">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span class="hidden sm:inline">Réinitialiser</span>
             </button>
         </div>
     </header>
@@ -85,35 +89,35 @@
     <!-- ============================================================== -->
     <!-- MAIN WORKSPACE : EXACTLY 2 PANELS (66% CHAT | 34% RIGHT BAR)    -->
     <!-- ============================================================== -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden relative">
 
         <!-- ============================================================== -->
-        <!-- PANEL 1 : MAIN CHAT AREA (APPROX 66% WIDTH)                    -->
+        <!-- PANEL 1 : MAIN CHAT AREA (RESPONSIVE FULL-WIDTH ON MOBILE)     -->
         <!-- ============================================================== -->
-        <main class="flex-1 flex flex-col bg-slate-50/40 relative border-r border-slate-200/80 overflow-hidden">
+        <main class="flex-1 flex flex-col bg-slate-50/40 relative border-r border-slate-200/80 overflow-hidden w-full">
             
             <!-- CHAT SCROLL AREA -->
-            <div id="chat-feed" class="flex-1 overflow-y-auto p-6 flex flex-col justify-between">
+            <div id="chat-feed" class="flex-1 overflow-y-auto p-3 sm:p-6 flex flex-col justify-between">
                 
                 <!-- WELCOME VIEW (DEFAULT INITIAL SCREEN) -->
-                <div id="welcome-view" class="my-auto max-w-2xl mx-auto w-full text-center py-6 flex flex-col items-center">
+                <div id="welcome-view" class="my-auto max-w-2xl mx-auto w-full text-center py-4 sm:py-6 flex flex-col items-center">
                     
-                    <div class="relative mb-6">
-                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-b from-blue-50 to-blue-100/70 border border-blue-200/60 flex items-center justify-center text-blue-600 shadow-md shadow-blue-500/10 ai-glow">
-                            <span class="text-2xl font-bold tracking-wider font-mono">AI</span>
+                    <div class="relative mb-4 sm:mb-6">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-blue-50 to-blue-100/70 border border-blue-200/60 flex items-center justify-center text-blue-600 shadow-md shadow-blue-500/10 ai-glow">
+                            <span class="text-xl sm:text-2xl font-bold tracking-wider font-mono">AI</span>
                         </div>
                         <i data-lucide="sparkles" class="w-4 h-4 text-blue-500 absolute -top-1 -right-2"></i>
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400 absolute top-10 -left-4"></i>
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400 absolute top-8 sm:top-10 -left-3 sm:-left-4"></i>
                         <i data-lucide="sparkles" class="w-3 h-3 text-blue-300 absolute -bottom-1 right-1"></i>
                     </div>
 
-                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2.5">Bonjour ! 👋</h2>
-                    <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed mb-10">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Bonjour ! 👋</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed mb-6 sm:mb-10 px-2">
                         Posez votre question, demandez une analyse SysML v2, ou explorez vos modèles. Je suis là pour vous aider.
                     </p>
 
                     <!-- SUGGESTED PROMPT PILLS -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full px-2 sm:px-0">
                         <button onclick="usePrompt('Analyser l architecture powertrain (IBD)')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm text-left transition group flex items-center gap-2.5">
                             <div class="p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
                                 <i data-lucide="code-2" class="w-4 h-4"></i>
@@ -151,24 +155,24 @@
             </div>
 
             <!-- COMPOSER FIXED AT BOTTOM -->
-            <div class="p-5 bg-gradient-to-t from-white via-white/95 to-transparent shrink-0">
+            <div class="p-3 sm:p-5 bg-gradient-to-t from-white via-white/95 to-transparent shrink-0">
                 <div class="max-w-3xl mx-auto">
                     <div id="attached-file-badge" class="hidden items-center gap-2 mb-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs w-max">
                         <i data-lucide="paperclip" class="w-3.5 h-3.5"></i>
-                        <span id="attached-file-name" class="font-medium">cahier_des_charges.txt</span>
+                        <span id="attached-file-name" class="font-medium max-w-[200px] sm:max-w-xs truncate">cahier_des_charges.txt</span>
                         <button onclick="removeAttachment()" class="text-blue-500 hover:text-blue-800 ml-1">✕</button>
                     </div>
 
-                    <form id="composer-form" onsubmit="handleSendMessage(event)" class="flex items-center gap-2.5 bg-white border border-slate-200/90 rounded-full px-3 py-2 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition">
-                        <button type="button" onclick="document.getElementById('file-input').click()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 transition" title="Joindre un fichier">
+                    <form id="composer-form" onsubmit="handleSendMessage(event)" class="flex items-center gap-1.5 sm:gap-2.5 bg-white border border-slate-200/90 rounded-full px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition">
+                        <button type="button" onclick="document.getElementById('file-input').click()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 transition" title="Joindre un fichier">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                         </button>
                         <input type="file" id="file-input" onchange="handleFileSelected(event)" class="hidden" accept=".txt,.sysml,.pdf,.doc,.json">
 
-                        <input type="text" id="user-input" placeholder="Tapez votre message..." autocomplete="off" class="flex-1 bg-transparent border-0 px-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none">
+                        <input type="text" id="user-input" placeholder="Tapez votre message ou besoin..." autocomplete="off" class="flex-1 bg-transparent border-0 px-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none">
 
-                        <button type="submit" id="btn-send" class="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 transition">
-                            <i data-lucide="send" class="w-4 h-4"></i>
+                        <button type="submit" id="btn-send" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 transition">
+                            <i data-lucide="send" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                         </button>
                     </form>
                 </div>
@@ -176,10 +180,24 @@
 
         </main>
 
+        <!-- BACKDROP POUR MOBILE DRAWER -->
+        <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden lg:hidden transition-opacity"></div>
+
         <!-- ============================================================== -->
-        <!-- PANEL 2 : RIGHT TECHNICAL SIDEBAR (APPROX 34% WIDTH)           -->
+        <!-- PANEL 2 : RIGHT TECHNICAL SIDEBAR (RESPONSIVE DRAWER ON MOBILE)-->
         <!-- ============================================================== -->
-        <aside class="w-[34%] min-w-[340px] max-w-[500px] bg-white flex flex-col shrink-0 overflow-hidden">
+        <aside id="right-sidebar" class="fixed lg:static top-0 right-0 h-full w-[85%] max-w-[420px] lg:w-[34%] lg:min-w-[340px] lg:max-w-[500px] bg-white flex flex-col shrink-0 overflow-hidden z-40 transition-transform duration-300 transform translate-x-full lg:translate-x-0 shadow-2xl lg:shadow-none border-l border-slate-200/80">
+            
+            <!-- HEADER MOBILE DE LA SIDEBAR (VISIBLE UNIQUEMENT SUR MOBILE) -->
+            <div class="lg:hidden h-14 border-b border-slate-100 px-4 flex items-center justify-between bg-slate-50 shrink-0">
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="panel-right" class="w-4 h-4 text-blue-600"></i>
+                    Panneau d'Ingénierie SysML
+                </span>
+                <button type="button" onclick="toggleMobileSidebar()" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white text-xs font-semibold border border-slate-200">
+                    ✕ Fermer
+                </button>
+            </div>
             
             <!-- TOP 4 TABS BAR : MODE EXPERT -->
             <div id="tabs-expert-bar" class="h-12 border-b border-slate-200 px-3 flex items-center justify-between shrink-0 bg-white">
@@ -1628,20 +1646,20 @@
                     </p>
 
                     <!-- SÉLECTEUR DE VUE MODULAIRE (NIVEAUX DE DÉTAIL / VIEWPOINTS SANS JARGON) -->
-                    <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl flex items-center justify-between">
+                    <div class="bg-slate-50 border border-slate-200 p-2 sm:p-2.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
                             <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-600"></i>
                             <span>Granularité :</span>
                         </div>
-                        <div class="flex items-center gap-1.5" id="view-btns-${cardId}">
-                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'system')" class="view-btn px-2.5 py-1 text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
-                                🏢 1. Vue Système (Niv. 0)
+                        <div class="flex flex-wrap items-center gap-1 sm:gap-1.5" id="view-btns-${cardId}">
+                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'system')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
+                                🏢 Niv. 0 (Contexte)
                             </button>
-                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'component')" class="view-btn px-2.5 py-1 text-[10.5px] rounded-lg font-semibold bg-blue-600 text-white shadow-2xs transition cursor-pointer">
-                                ⚙️ 2. Blocs &amp; Échanges (Niv. 1)
+                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'component')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-semibold bg-blue-600 text-white shadow-2xs transition cursor-pointer">
+                                ⚙️ Niv. 1 (Blocs/Flux)
                             </button>
-                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'action')" class="view-btn px-2.5 py-1 text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
-                                🔄 3. Déroulement Pas à Pas (Niv. 2)
+                            <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'action')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
+                                🔄 Niv. 2 (Modes/États)
                             </button>
                         </div>
                     </div>
@@ -1853,6 +1871,21 @@
         }
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // GESTION DU TIROIR MOBILE (DRAWER)
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('right-sidebar');
+            const backdrop = document.getElementById('mobile-sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+            const isOpen = !sidebar.classList.contains('translate-x-full');
+            if (isOpen) {
+                sidebar.classList.add('translate-x-full');
+                backdrop.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('translate-x-full');
+                backdrop.classList.remove('hidden');
+            }
+        }
 
         // Gestion de la clé API Gemini dans la sidebar droite
         function toggleGeminiKeyPanel() {
