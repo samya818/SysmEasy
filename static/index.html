@@ -1270,17 +1270,20 @@
 
             if (backendError || !backendData || !backendData.model_key) {
                 const procEl = document.getElementById(processingId);
-                if (procEl) procEl.closest('.flex.gap-4')?.remove();
+                if (procEl) procEl.remove();
+                const safeErr = String(backendError || "Réponse backend invalide.")
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 const errWrap = document.createElement('div');
-                errWrap.className = "flex gap-4 items-start";
+                errWrap.className = "flex gap-3 items-start max-w-2xl";
                 errWrap.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 font-bold text-xs shadow-sm">!</div>
-                    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 max-w-2xl text-xs text-red-800">
-                        <p class="font-bold mb-1">Échec de l'analyse LLM</p>
-                        <p>${escapeHtml(backendError || "Réponse backend invalide.")}</p>
+                    <div class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 font-bold text-xs shadow-sm">!</div>
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 flex-1 text-xs text-red-800">
+                        <p class="font-bold mb-1">Échec de l'analyse</p>
+                        <p>${safeErr}</p>
                     </div>`;
-                chatFeed.appendChild(errWrap);
-                chatFeed.scrollTop = chatFeed.scrollHeight;
+                messagesList.appendChild(errWrap);
+                scrollChat();
+                removeAttachment();
                 return;
             }
 

@@ -78,8 +78,8 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
                 nums = tuple(int(n) for n in re.findall(r"\d+", name)) or (0,)
                 return (is_stable, is_flash, nums)
             ordered = sorted(candidates, key=_score, reverse=True)
-            # Prioritize proven fast Flash models
-            for preferred_m in reversed(["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]):
+            # Prioritize proven fast, low-latency Flash models (avoid Vercel serverless timeout)
+            for preferred_m in reversed(["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]):
                 if preferred_m in ordered:
                     ordered.remove(preferred_m)
                     ordered.insert(0, preferred_m)
@@ -87,7 +87,7 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
             return _CACHED_GEMINI_MODELS
     except Exception:
         pass
-    return [os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")]
+    return [os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")]
 
 
 class EnvChatProvider:
@@ -127,7 +127,7 @@ class EnvChatProvider:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=10) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                 _LAST_WORKING_GEMINI_MODEL = mdl
                 return LLMResponse(content=data["choices"][0]["message"]["content"], model=mdl)
