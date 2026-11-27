@@ -204,7 +204,14 @@ def _render_stm(result: Livrable2Result, raw_prompt: str, output_path: str, spec
     """Niveau 2: State Machine Diagram showing operational modes & wrapped transitions."""
     states = list(spec.states) if spec and len(spec.states) >= 2 else _extract_states(result, raw_prompt)
     guards = list(spec.transitions) if spec and spec.transitions else ["init_ok", "seuil / défaut", "urgence"]
-    if render_stm_with_elk(result.project_name, states, guards, output_path):
+    if render_stm_with_elk(
+        result.project_name,
+        states,
+        guards,
+        output_path,
+        direction=spec.layout_direction if spec else "RIGHT",
+        aspect_ratio=spec.aspect_ratio if spec else 2.0,
+    ):
         return
     fig, ax = plt.subplots(figsize=(11.5, 5.0), dpi=180)
     ax.set_xlim(0, 11.5)

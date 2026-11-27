@@ -27,7 +27,7 @@ MOTTE_METHODOLOGY_PROMPT = """Tu es un architecte MBSE expert en MagicGrid, Harm
 À partir d'un cahier des charges résumé, choisis entre 2 et 4 diagrammes SysML pertinents (jamais plus de 4, sans redondance) selon ces règles :
 1. "context_bdd" (Vue Contexte / Système) : toujours utile en Niveau 0 pour situer le système, ses acteurs/interfaces externes et sa mission.
 2. "ibd" (Architecture Interne & Flux) : indispensable dès qu'il y a >= 2 sous-systèmes/composants ou des ports/flux (énergie, signal, vidéo, mécanique).
-3. "stm" (Machine à États / Modes) : à choisir (au lieu de "act") dès que le système décrit des modes, états ou transitions temporelles (démarrage, veille, mode éco, arrêt d'urgence, seuil de charge). Fournis alors "states" (3 à 4 états propres au système) et "transitions" (gardes/événements issus du CDC).
+3. "stm" (Machine à États / Modes) : à choisir (au lieu de "act") dès que le système décrit des modes, états ou transitions temporelles (démarrage, veille, mode éco, arrêt d'urgence, seuil de charge). Fournis alors "states" (3 à 4 états propres au système), "transitions" (déclencheurs concis uniquement, sans répéter "-> ÉtatCible") et "layout_direction" ("DOWN" si >= 4 états ou longs libellés pour tenir lisiblement sur A4, sinon "RIGHT").
 4. "act" (Diagramme d'Activité / Flux fonctionnel) : à choisir si le système décrit un enchaînement d'actions ou une boucle sans modes explicites.
 5. "par" (Bilan Paramétrique / Budgets) : à inclure uniquement si le cahier des charges impose des budgets numériques critiques (masse, puissance, autonomie).
 6. "uc" (Cas d'Utilisation) : à choisir seulement si plusieurs acteurs humains/externes interagissent avec des services distincts.
@@ -40,8 +40,9 @@ Réponds UNIQUEMENT en JSON valide sans jargon technique :
       "type": "context_bdd|uc|ibd|stm|act|par",
       "title": "Titre court en français",
       "comment": "1 phrase simple et claire expliquant ce que montre ce schéma.",
+      "layout_direction": "RIGHT" | "DOWN",
       "states": ["optionnel pour stm: État 1", "État 2", "État 3"],
-      "transitions": ["optionnel pour stm: garde 1->2", "garde 2->3"]
+      "transitions": ["optionnel pour stm: déclencheur 1", "déclencheur 2"]
     }
   ]
 }"""
@@ -56,6 +57,8 @@ class DiagramSpec:
     comment: str
     states: list[str] = field(default_factory=list)
     transitions: list[str] = field(default_factory=list)
+    layout_direction: str = "RIGHT"
+    aspect_ratio: float = 2.0
 
 
 @dataclass(frozen=True)
@@ -96,12 +99,15 @@ def _parse_llm_plan(raw_json: str) -> DiagramPlan | None:
         dtype = str(item.get("type", "")).strip()
         if dtype in VALID_DIAGRAM_TYPES and dtype not in seen:
             seen.add(dtype)
+            raw_dir = str(item.get("layout_direction", "RIGHT")).strip().upper()
+            layout_dir = raw_dir if raw_dir in ("RIGHT", "DOWN") else "RIGHT"
             specs.append(DiagramSpec(
                 type=dtype,
                 title=str(item.get("title", dtype)).strip()[:90],
                 comment=str(item.get("comment", "")).strip()[:260],
                 states=[str(s).strip()[:32] for s in (item.get("states") or [])[:4]],
                 transitions=[str(t).strip()[:48] for t in (item.get("transitions") or [])[:4]],
+                layout_direction=layout_dir,
             ))
     if len(specs) < 2:
         return None

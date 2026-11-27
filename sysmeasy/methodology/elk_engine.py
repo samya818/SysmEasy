@@ -304,8 +304,11 @@ def render_stm_with_elk(
     states: list[str],
     guards: list[str],
     output_path: str,
+    direction: str = "RIGHT",
+    aspect_ratio: float = 2.0,
 ) -> bool:
     """Render a State Machine Diagram using ELK layered routing. Returns False if ELK is unavailable."""
+    elk_dir = direction if direction in ("RIGHT", "DOWN") else "RIGHT"
     elk_nodes: list[dict[str, Any]] = [
         {"id": "__init__", "width": 22, "height": 22, "meta": {"init": True}},
     ]
@@ -322,12 +325,12 @@ def render_stm_with_elk(
         {"id": "e_init", "sources": ["__init__"], "targets": ["st_0"], "labels": []},
     ]
     for i in range(len(states) - 1):
-        g = textwrap.fill(guards[i % len(guards)], width=18)
+        g = textwrap.fill(guards[i % len(guards)], width=20)
         elk_edges.append({
             "id": f"e_{i}",
             "sources": [f"st_{i}"],
             "targets": [f"st_{i + 1}"],
-            "labels": [{"text": g, "width": 120, "height": 28}],
+            "labels": [{"text": g, "width": 125, "height": 28}],
         })
     if len(states) >= 2:
         elk_edges.append({
@@ -342,16 +345,17 @@ def render_stm_with_elk(
         "id": "stm_root",
         "layoutOptions": {
             "elk.algorithm": "layered",
-            "elk.direction": "RIGHT",
+            "elk.direction": elk_dir,
+            "elk.aspectRatio": str(aspect_ratio),
             "elk.edgeRouting": "ORTHOGONAL",
             "elk.layered.cycleBreaking.strategy": "MODEL_ORDER",
             "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
-            "elk.layered.edgeLabels.sideSelection": "ALWAYS_UP",
+            "elk.layered.edgeLabels.sideSelection": "SMART_UP" if elk_dir == "DOWN" else "ALWAYS_UP",
             "elk.spacing.nodeNode": "44",
-            "elk.layered.spacing.nodeNodeBetweenLayers": "68",
+            "elk.layered.spacing.nodeNodeBetweenLayers": "54" if elk_dir == "DOWN" else "68",
             "elk.spacing.edgeNode": "26",
             "elk.spacing.edgeLabel": "10",
-            "elk.padding": "[top=30,left=24,bottom=34,right=24]",
+            "elk.padding": "[top=30,left=28,bottom=34,right=28]",
         },
         "children": elk_nodes,
         "edges": elk_edges,
