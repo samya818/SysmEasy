@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
@@ -111,41 +111,10 @@
                         <i data-lucide="sparkles" class="w-3 h-3 text-blue-300 absolute -bottom-1 right-1"></i>
                     </div>
 
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Bonjour ! 👋</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed mb-6 sm:mb-10 px-2">
-                        Posez votre question, demandez une analyse SysML v2, ou explorez vos modèles. Je suis là pour vous aider.
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Bonjour !</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed mb-6 px-2">
+                        Décrivez votre besoin en langage naturel ou attachez un cahier des charges (PDF, texte) pour générer et vérifier votre architecture SysML v2.
                     </p>
-
-                    <!-- SUGGESTED PROMPT PILLS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full px-2 sm:px-0">
-                        <button onclick="usePrompt('Analyser l architecture powertrain (IBD)')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm text-left transition group flex items-center gap-2.5">
-                            <div class="p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
-                                <i data-lucide="code-2" class="w-4 h-4"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-slate-700 group-hover:text-blue-600">Chaîne Traction<br/><span class="text-[10px] text-slate-400 font-normal">SysML v2 IBD</span></div>
-                        </button>
-
-                        <button onclick="usePrompt('Contrôle de charge batterie autonome (BMS & Onduleur)')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm text-left transition group flex items-center gap-2.5">
-                            <div class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition">
-                                <i data-lucide="zap" class="w-4 h-4"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-slate-700 group-hover:text-emerald-600">Recharge Batterie<br/><span class="text-[10px] text-slate-400 font-normal">Action Flow</span></div>
-                        </button>
-
-                        <button onclick="usePrompt('Vérifier la cohérence formelle du modèle (5 Invariants)')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm text-left transition group flex items-center gap-2.5">
-                            <div class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
-                                <i data-lucide="shield-check" class="w-4 h-4"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-slate-700 group-hover:text-indigo-600">Audit Invariants<br/><span class="text-[10px] text-slate-400 font-normal">5 Invariants A3</span></div>
-                        </button>
-
-                        <button onclick="usePrompt('Générer un rapport d audit avec traçabilité satisfy')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm text-left transition group flex items-center gap-2.5">
-                            <div class="p-1.5 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition">
-                                <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-slate-700 group-hover:text-purple-600">Traçabilité<br/><span class="text-[10px] text-slate-400 font-normal">Liens satisfy</span></div>
-                        </button>
-                    </div>
 
                 </div>
 
@@ -184,306 +153,45 @@
         <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden lg:hidden transition-opacity"></div>
 
         <!-- ============================================================== -->
-        <!-- PANEL 2 : RIGHT TECHNICAL SIDEBAR (RESPONSIVE DRAWER ON MOBILE)-->
+        <!-- PANEL 2 : RIGHT TECHNICAL SIDEBAR                              -->
         <!-- ============================================================== -->
-        <aside id="right-sidebar" class="fixed lg:static top-0 right-0 h-full w-[85%] max-w-[420px] lg:w-[34%] lg:min-w-[340px] lg:max-w-[500px] bg-white flex flex-col shrink-0 overflow-hidden z-40 transition-transform duration-300 transform translate-x-full lg:translate-x-0 shadow-2xl lg:shadow-none border-l border-slate-200/80">
+        <aside id="right-sidebar" class="fixed lg:static top-0 right-0 h-full w-[85%] max-w-[380px] lg:w-[280px] xl:w-[320px] bg-white flex flex-col justify-between shrink-0 overflow-hidden z-40 transition-transform duration-300 transform translate-x-full lg:translate-x-0 shadow-2xl lg:shadow-none border-l border-slate-200/80 p-4">
             
             <!-- HEADER MOBILE DE LA SIDEBAR (VISIBLE UNIQUEMENT SUR MOBILE) -->
-            <div class="lg:hidden h-14 border-b border-slate-100 px-4 flex items-center justify-between bg-slate-50 shrink-0">
+            <div class="lg:hidden h-12 border-b border-slate-100 flex items-center justify-between pb-2 shrink-0">
                 <span class="text-xs font-bold text-slate-800 flex items-center gap-2">
-                    <i data-lucide="panel-right" class="w-4 h-4 text-blue-600"></i>
-                    Panneau d'Ingénierie SysML
+                    <i data-lucide="settings" class="w-4 h-4 text-blue-600"></i>
+                    Configuration
                 </span>
-                <button type="button" onclick="toggleMobileSidebar()" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white text-xs font-semibold border border-slate-200">
-                    ✕ Fermer
-                </button>
-            </div>
-            
-            <!-- TOP 4 TABS BAR : MODE EXPERT -->
-            <div id="tabs-expert-bar" class="h-12 border-b border-slate-200 px-3 flex items-center justify-between shrink-0 bg-white">
-                <button onclick="switchTab('code')" id="tab-code" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
-                    <span>SysML v2 Code</span>
-                </button>
-                <button onclick="switchTab('kg')" id="tab-kg" class="tab-btn flex-1 py-3 text-xs font-semibold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="network" class="w-3.5 h-3.5"></i>
-                    <span>Revue &amp; Cohérence KG</span>
-                </button>
-                <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-                    <span>Audit A3</span>
-                </button>
-                <button onclick="switchTab('plm')" id="tab-plm" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="link" class="w-3.5 h-3.5"></i>
-                    <span>Connexion PLM</span>
+                <button type="button" onclick="toggleMobileSidebar()" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold border border-slate-200">
+                    Fermer
                 </button>
             </div>
 
-            <!-- TOP 4 TABS BAR : MODE MÉTIER (VULGARISÉ SANS JARGON) -->
-            <div id="tabs-metier-bar" class="h-12 border-b border-slate-200 px-3 flex items-center justify-between shrink-0 bg-white hidden">
-                <button onclick="switchTab('metier-fiche')" id="tab-metier-fiche" class="tab-btn flex-1 py-3 text-xs font-semibold text-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
-                    <span>Fiche Produit</span>
-                </button>
-                <button onclick="switchTab('metier-pdf')" id="tab-metier-pdf" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
-                    <span>Sources PDF</span>
-                </button>
-                <button onclick="switchTab('metier-alertes')" id="tab-metier-alertes" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
-                    <span>Zones Floues</span>
-                </button>
-                <button onclick="switchTab('metier-statut')" id="tab-metier-statut" class="tab-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
-                    <span>Statut Projet</span>
-                </button>
-            </div>
 
-            <!-- TAB CONTENTS -->
-            <div class="flex-1 overflow-y-auto p-5 bg-white">
 
-                <!-- CONTENUS VUE MÉTIER -->
-                <div id="content-metier-fiche" class="tab-content hidden space-y-4">
-                    <div class="border-b border-slate-100 pb-2">
-                        <h3 class="text-xs font-bold text-slate-900" id="metier-title">Synthèse Fonctionnelle du Produit</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Explication en langage clair sans syntaxe de code :</p>
-                    </div>
-                    <div id="metier-summary-box" class="space-y-3 text-xs"></div>
-                </div>
-
-                <div id="content-metier-pdf" class="tab-content hidden space-y-4">
-                    <div class="border-b border-slate-100 pb-2">
-                        <h3 class="text-xs font-bold text-slate-900">Traçabilité dans le Cahier des Charges</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Renvoi direct aux pages et paragraphes du PDF :</p>
-                    </div>
-                    <div id="metier-pdf-box" class="space-y-2.5 text-xs"></div>
-                </div>
-
-                <div id="content-metier-alertes" class="tab-content hidden space-y-4">
-                    <div class="border-b border-slate-100 pb-2 flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xs font-bold text-slate-900">Points de Vigilance &amp; Zones Floues</h3>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Ce qui manque ou doit être clarifié dans le CDC :</p>
-                        </div>
-                        <span id="metier-alert-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">1 alerte</span>
-                    </div>
-                    <div id="metier-alertes-box" class="space-y-2.5 text-xs"></div>
-                </div>
-
-                <div id="content-metier-statut" class="tab-content hidden space-y-4">
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-900">État d'Avancement du Projet</span>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Dossier Validé</span>
-                        </div>
-                        <p class="text-[11px] text-slate-600 leading-relaxed">
-                            Ce modèle a été contrôlé. Il est conforme aux règles physiques et peut être partagé en réunion avec les équipes Achats, Méthodes et Qualité.
-                        </p>
-                        <div class="pt-2 border-t border-slate-200/70 space-y-1.5 text-xs">
-                            <div class="flex justify-between"><span class="text-slate-500">Exigences couvertes :</span><span class="font-bold text-emerald-600">100% (2/2)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Risque d'incohérence :</span><span class="font-bold text-emerald-600">0% (Vérifié)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Synchronisation PLM :</span><span class="font-bold text-blue-600">À jour (3DEXPERIENCE)</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CONTENUS VUE EXPERT (SYSML V2) -->
-
-                <!-- 1. TAB : SYSML V2 CODE -->
-                <div id="content-code" class="tab-content hidden space-y-3">
+            <!-- GEMINI API KEY WIDGET ATTACHÉ EN BAS DE LA SIDEBAR -->
+            <div class="pt-3 border-t border-slate-200">
+                <div id="gemini-key-panel" class="mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-sm space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                            <i data-lucide="file-code" class="w-4 h-4 text-blue-600"></i>
-                            Modèle SysML v2 Généré
+                        <span class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5 text-blue-600"></i>
+                            Clé API Google Gemini
                         </span>
-                        <button onclick="copyCode()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            Copier
-                        </button>
-                    </div>
-                    <pre id="sysml-code-block" class="bg-slate-900 text-blue-300 p-4 rounded-xl text-xs font-mono leading-relaxed overflow-x-auto shadow-inner">// En attente d'une requête utilisateur...</pre>
-                </div>
-
-                <!-- 2. TAB : MATRICES KG (DYNAMIC SSOT ENGINE WITH KATEX) -->
-                <div id="content-kg" class="tab-content space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs font-bold text-slate-900" id="kg-scenario-title">Matrices du Modèle Actif</span>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200" id="kg-scenario-badge">Synchronisé</span>
-                    </div>
-
-                    <!-- CONTAINER POUR MATRICES GÉNÉRÉES DYNAMIQUEMENT -->
-                    <div id="kg-dynamic-container" class="space-y-4 text-xs"></div>
-                </div>
-
-                <!-- 3. TAB : AUDIT A3 (5 INVARIANTS HARMONISÉS) -->
-                <div id="content-audit" class="tab-content hidden space-y-4">
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-900">Moteur Déterministe (5 Invariants Harmonisés)</span>
-                            <span id="audit-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
-                                VALIDÉ (BON ✓)
-                            </span>
-                        </div>
-                        <div class="space-y-1.5 text-xs">
-                            <div class="flex justify-between py-1 border-b border-slate-200/50">
-                                <span class="text-slate-600 font-mono text-[11px]">[INV-01] Domain_Conservation</span>
-                                <span class="font-semibold text-emerald-600">VALIDE ✓ (0 anomalie)</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/50">
-                                <span class="text-slate-600 font-mono text-[11px]">[INV-02] Direction_Conjugation</span>
-                                <span class="font-semibold text-emerald-600">VALIDE ✓ (out → in &amp; ~)</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/50">
-                                <span class="text-slate-600 font-mono text-[11px]">[INV-03] Payload_Unit_Typing</span>
-                                <span class="font-semibold text-emerald-600">VALIDE ✓ (Normalisation SI)</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/50">
-                                <span class="text-slate-600 font-mono text-[11px]">[INV-04] Action_Allocation_Data</span>
-                                <span class="font-semibold text-emerald-600">VALIDE ✓ (perform &amp; Pins)</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/50">
-                                <span class="text-slate-600 font-mono text-[11px]">[INV-05] Topology_Closure</span>
-                                <span class="font-semibold text-emerald-600">VALIDE ✓ (Standalone explicite)</span>
-                            </div>
-                            <div class="flex justify-between py-1 pt-1.5 text-slate-500 text-[11px]">
-                                <span>Coût &amp; Latence :</span>
-                                <span class="font-mono text-blue-600 font-bold">0 token | 0.07 ms</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TRAÇABILITÉ DES EXIGENCES -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-900 mb-1.5 flex items-center justify-between">
-                            <span>Traçabilité des Exigences (satisfy links)</span>
-                            <span class="text-[9px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">Non-Fonctionnel</span>
-                        </h4>
-                        <div id="audit-traceability-box" class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs"></div>
-                    </div>
-
-                    <!-- JOURNAL ORCHESTRATEUR -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-900 mb-1.5 flex items-center gap-1.5">
-                            <i data-lucide="activity" class="w-3.5 h-3.5 text-blue-600"></i>
-                            Journal de l'Orchestrateur (Agent 4)
-                        </h4>
-                        <div id="orchestrator-log-box" class="p-3 rounded-xl bg-slate-900 text-slate-300 font-mono text-[11px] leading-relaxed max-h-36 overflow-y-auto">
-                            [Agent 4] Système initialisé. Moteur Invariants prêt.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. TAB : CONNEXION PLM — MODE SANDBOX HONNÊTE -->
-                <div id="content-plm" class="tab-content hidden space-y-4">
-
-                    <!-- En-tête section -->
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="database" class="w-4 h-4 text-slate-600"></i>
-                        <h3 class="text-sm font-bold text-slate-900">Interopérabilité PLM</h3>
-                    </div>
-
-                    <!-- Badge Sandbox -->
-                    <div class="flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-amber-50 border border-amber-200">
-                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 shrink-0"></i>
-                        <div>
-                            <div class="text-xs font-bold text-amber-800">Mode Sandbox Standalone</div>
-                            <div class="text-[11px] text-amber-700 mt-0.5">Aucune connexion à un PLM de production. Les exports générés sont compatibles avec les standards ouverts.</div>
-                        </div>
-                    </div>
-
-                    <!-- Explication honnête -->
-                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
-                        Cette plateforme génère des fichiers d'export aux formats standards ouverts, prêts à être importés dans un PLM de production. Elle n'est pas couplée à un serveur PLM réel dans ce contexte de démonstration PFE.
-                    </div>
-
-                    <!-- PLM cibles supportées -->
-                    <div>
-                        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Systèmes PLM compatibles</div>
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm">
-                                <div class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                                    <i data-lucide="box" class="w-3.5 h-3.5 text-blue-600"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-semibold text-slate-800">Dassault 3DEXPERIENCE</div>
-                                    <div class="text-[10px] text-slate-400">SysML v2 REST API · OSLC 3.0</div>
-                                </div>
-                                <span class="px-1.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500">Compatible</span>
-                            </div>
-                            <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm">
-                                <div class="w-6 h-6 rounded-lg bg-teal-100 flex items-center justify-center shrink-0">
-                                    <i data-lucide="box" class="w-3.5 h-3.5 text-teal-600"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-semibold text-slate-800">PTC Windchill</div>
-                                    <div class="text-[10px] text-slate-400">Windchill RV&S · JSON-LD Import</div>
-                                </div>
-                                <span class="px-1.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500">Compatible</span>
-                            </div>
-                            <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm">
-                                <div class="w-6 h-6 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-                                    <i data-lucide="box" class="w-3.5 h-3.5 text-violet-600"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-semibold text-slate-800">Siemens Teamcenter</div>
-                                    <div class="text-[10px] text-slate-400">SysML v2 Exchange Format · OSLC</div>
-                                </div>
-                                <span class="px-1.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500">Compatible</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bouton export payload -->
-                    <button onclick="exportPLMPayload()" id="plm-export-btn" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition shadow-sm">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        Télécharger le payload OSLC/SysML v2
-                    </button>
-
-                    <!-- Formulaire de configuration PLM -->
-                    <div class="border-t border-slate-100 pt-4">
-                        <button onclick="togglePLMConfigForm()" class="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 py-1 transition">
-                            <span class="flex items-center gap-1.5"><i data-lucide="settings" class="w-3.5 h-3.5"></i>Configurer une connexion PLM réelle</span>
-                            <i data-lucide="chevron-down" id="plm-config-chevron" class="w-4 h-4 text-slate-400 transition-transform"></i>
-                        </button>
-                        <div id="plm-config-panel" class="mt-3 space-y-3 hidden">
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-500 block mb-1">URL du serveur PLM</label>
-                                <input id="plm-server-url" type="text" placeholder="https://mon-plm.entreprise.com" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 outline-none focus:border-blue-400 transition">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-500 block mb-1">Token API</label>
-                                <input id="plm-api-token" type="password" placeholder="••••••••••••••••" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 outline-none focus:border-blue-400 transition">
-                            </div>
-                            <button onclick="testPLMConnection()" id="plm-test-btn" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
-                                <i data-lucide="plug" class="w-3.5 h-3.5"></i>
-                                Tester la connexion
-                            </button>
-                            <div id="plm-test-result" class="text-[11px] text-slate-500 text-center hidden"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- GEMINI API KEY WIDGET ATTACHÉ À LA SIDEBAR DROITE -->
-            <div class="border-t border-slate-200 bg-slate-50/90 px-4 py-2.5 shrink-0">
-                <div id="gemini-key-panel" class="hidden mb-2.5 p-3 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-slate-800">Clé API Google Gemini</span>
                         <button type="button" onclick="toggleGeminiKeyPanel()" class="text-slate-400 hover:text-slate-600 text-xs">✕</button>
                     </div>
-                    <div class="flex gap-1.5">
-                        <input id="gemini-key-input" type="password" placeholder="Collez votre clé API Gemini..." class="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 outline-none focus:border-blue-500">
-                        <button type="button" id="gemini-key-save-btn" onclick="saveGeminiApiKey()" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shrink-0">
-                            Enregistrer
+                    <div class="space-y-2">
+                        <input id="gemini-key-input" type="password" placeholder="Collez votre clé API..." class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 outline-none focus:border-blue-500">
+                        <button type="button" id="gemini-key-save-btn" onclick="saveGeminiApiKey()" class="w-full py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                            Enregistrer la clé
                         </button>
                     </div>
                     <div id="gemini-key-feedback" class="text-[11px] hidden"></div>
                 </div>
-                <button type="button" onclick="toggleGeminiKeyPanel()" id="gemini-key-toggle-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700 transition shadow-sm">
+                <button type="button" onclick="toggleGeminiKeyPanel()" id="gemini-key-toggle-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 transition shadow-sm">
                     <span class="flex items-center gap-2">
-                        <i data-lucide="key-round" class="w-3.5 h-3.5 text-blue-600"></i>
-                        <span>Clé API Gemini</span>
+                        <i data-lucide="key" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Clé Gemini</span>
                     </span>
                     <span id="gemini-key-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">Vérification…</span>
                 </button>
@@ -812,7 +520,7 @@
                     <div class="flex items-center justify-between pt-1">
                         <div class="flex items-center gap-1.5" id="review-filter-group">
                             <button type="button" id="filter-btn-all" onclick="filterReviewCards('all')" class="rev-filter-btn px-2.5 py-1 text-[10.5px] font-semibold bg-white text-blue-600 border border-blue-300 rounded-lg shadow-2xs">Tous (3)</button>
-                            <button type="button" id="filter-btn-alert" onclick="filterReviewCards('alert')" class="rev-filter-btn px-2.5 py-1 text-[10.5px] font-medium bg-white text-slate-600 hover:text-amber-700 border border-slate-200 rounded-lg">⚠️ Alertes (1)</button>
+                            <button type="button" id="filter-btn-alert" onclick="filterReviewCards('alert')" class="rev-filter-btn px-2.5 py-1 text-[10.5px] font-medium bg-white text-slate-600 hover:text-amber-700 border border-slate-200 rounded-lg">Alertes (1)</button>
                             <button type="button" id="filter-btn-pending" onclick="filterReviewCards('pending')" class="rev-filter-btn px-2.5 py-1 text-[10.5px] font-medium bg-white text-slate-600 hover:text-blue-600 border border-slate-200 rounded-lg">En attente (0)</button>
                         </div>
                         <button type="button" onclick="validateAllEligible()" class="text-[10.5px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200 transition cursor-pointer">
@@ -885,10 +593,10 @@
                             </button>
                             <div class="flex items-center gap-1.5">
                                 <button type="button" onclick="markAsFlagged(this, 'Flux puissance électrique')" class="px-2.5 py-1 text-[10px] rounded-lg font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer">
-                                    ⚠️ Zone floue
+                                    Zone floue
                                 </button>
                                 <button type="button" onclick="openQuickEdit('edit-box-bat-1')" class="px-2.5 py-1 text-[10px] rounded-lg font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
-                                    ✎ Modifier
+                                    Modifier
                                 </button>
                                 <button type="button" onclick="confirmValidation(this)" class="px-3 py-1 text-[10px] rounded-lg font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition flex items-center gap-1 cursor-pointer">
                                     <i data-lucide="check" class="w-3 h-3"></i> C'est exact
@@ -914,13 +622,13 @@
                                 <span class="px-2 py-0.5 rounded text-[9.5px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">Composant Autonome</span>
                             </div>
                             <span class="card-status-pill text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1">
-                                ⚠️ Point à Confirmer
+                                Point à Confirmer
                             </span>
                         </div>
 
                         <p class="text-slate-700 leading-relaxed">
                             La <b>Sonde de Température</b> (<code>thermalSensor</code>) fonctionne en capteur autonome dédié à la protection thermique du pack. 
-                            <span class="text-amber-900 font-semibold bg-amber-100/80 px-1.5 py-0.5 rounded block mt-1">⚠️ Valeur absente du cahier des charges — Suggestion IA à valider : plage thermique recommandée -10 °C à +45 °C (standard ISO 6469-1).</span>
+                            <span class="text-amber-900 font-semibold bg-amber-100/80 px-1.5 py-0.5 rounded block mt-1">Valeur absente du cahier des charges — Suggestion IA à valider : plage thermique recommandée -10 °C à +45 °C (standard ISO 6469-1).</span>
                         </p>
 
                         <div class="p-2 rounded-xl bg-white border border-amber-200 flex items-start gap-2">
@@ -982,7 +690,7 @@
                             </button>
                             <div class="flex items-center gap-1.5">
                                 <button type="button" onclick="markAsFlagged(this, 'Seuil coupure 100%')" class="px-2.5 py-1 text-[10px] rounded-lg font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer">
-                                    ⚠️ Zone floue
+                                    Zone floue
                                 </button>
                                 <button type="button" onclick="confirmValidation(this)" class="px-3 py-1 text-[10px] rounded-lg font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition flex items-center gap-1 cursor-pointer">
                                     <i data-lucide="check" class="w-3 h-3"></i> C'est exact
@@ -1031,7 +739,7 @@
                             </button>
                             <div class="flex items-center gap-1.5">
                                 <button type="button" onclick="markAsFlagged(this, 'Couple 300 N.m')" class="px-2.5 py-1 text-[10px] rounded-lg font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer">
-                                    ⚠️ Zone floue
+                                    Zone floue
                                 </button>
                                 <button type="button" onclick="confirmValidation(this)" class="px-3 py-1 text-[10px] rounded-lg font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition flex items-center gap-1 cursor-pointer">
                                     <i data-lucide="check" class="w-3 h-3"></i> C'est exact
@@ -1241,10 +949,10 @@
                 pill.innerHTML = `<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i> Validé Métier`;
             }
             btn.className = "px-3 py-1 text-[10px] rounded-lg font-bold text-emerald-800 bg-emerald-200 border border-emerald-300 transition flex items-center gap-1 cursor-default";
-            btn.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Validé ✓`;
+            btn.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Validé`;
             lucide.createIcons();
             updateReviewProgress();
-            showToast("✓ Point validé avec succès (enregistré dans la revue locale)", "success");
+            showToast("Point validé avec succès (enregistré dans la revue locale)", "success");
         }
 
         function markAsFlagged(btn, topic) {
@@ -1256,10 +964,10 @@
             const pill = card.querySelector('.card-status-pill');
             if (pill) {
                 pill.className = "card-status-pill text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1";
-                pill.innerHTML = `⚠️ Zone Floue Signalée`;
+                pill.innerHTML = `Zone floue Signalée`;
             }
             updateReviewProgress();
-            showToast(`⚠️ « ${topic} » transféré aux Zones Floues & Arbitrages`, "warning");
+            showToast(`"${topic}" transféré aux zones floues`, "warning");
             setPersonaMode('metier');
             switchMetierTab('zones');
         }
@@ -1276,7 +984,7 @@
 
         function applyQuickEdit(boxId, title) {
             cancelQuickEdit(boxId);
-            showToast(`✓ « ${title} » mis à jour — 5 Invariants re-vérifiés (Conforme)`, "info");
+            showToast(`Mise à jour — ${title} » mis à jour — 5 Invariants re-vérifiés (Conforme)`, "info");
             updateReviewProgress();
         }
 
@@ -1293,7 +1001,7 @@
             });
             updateReviewProgress();
             lucide.createIcons();
-            showToast("✓ Tous les points éligibles ont été validés (100%)", "success");
+            showToast("Tous les points éligibles ont été validés (100%)", "success");
         }
 
         function filterReviewCards(filterType) {
@@ -1342,7 +1050,7 @@
             const btnAlert = document.getElementById('filter-btn-alert');
             const btnPending = document.getElementById('filter-btn-pending');
             if (btnAll) btnAll.textContent = `Tous (${total})`;
-            if (btnAlert) btnAlert.textContent = `⚠️ Alertes (${alerts})`;
+            if (btnAlert) btnAlert.textContent = `Alertes ($\{alerts\})`;
             if (btnPending) btnPending.textContent = `En attente (${pending})`;
         }
 
@@ -1375,7 +1083,7 @@
             const apiToken = document.getElementById('plm-api-token').value.trim();
 
             if (!serverUrl) {
-                resultEl.textContent = "⚠ Veuillez saisir l'URL du serveur.";
+                resultEl.textContent = "Veuillez saisir l'URL du serveur.";
                 resultEl.className = "text-[11px] text-amber-600 text-center";
                 resultEl.classList.remove('hidden');
                 return;
@@ -1397,7 +1105,7 @@
                 resultEl.className = "text-[11px] text-slate-600 text-center";
                 resultEl.classList.remove('hidden');
             } catch (err) {
-                resultEl.textContent = "✗ Impossible de joindre le serveur. Vérifiez l'URL et le réseau.";
+                resultEl.textContent = "Impossible de joindre le serveur. Vérifiez l'URL et le réseau.";
                 resultEl.className = "text-[11px] text-red-600 text-center";
                 resultEl.classList.remove('hidden');
             } finally {
@@ -1653,13 +1361,13 @@
                         </div>
                         <div class="flex flex-wrap items-center gap-1 sm:gap-1.5" id="view-btns-${cardId}">
                             <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'system')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
-                                🏢 Niv. 0 (Contexte)
+                                Niv. 0 — Contexte
                             </button>
                             <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'component')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-semibold bg-blue-600 text-white shadow-2xs transition cursor-pointer">
-                                ⚙️ Niv. 1 (Blocs/Flux)
+                                Niv. 1 — Blocs/Flux
                             </button>
                             <button type="button" onclick="switchViewpoint(this, '${cardId}', '${activeModelKey}', 'action')" class="view-btn flex-1 sm:flex-none text-center px-2 py-1 text-[10px] sm:text-[10.5px] rounded-lg font-medium bg-white text-slate-700 border border-slate-200 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition cursor-pointer">
-                                🔄 Niv. 2 (Modes/États)
+                                Niv. 2 — Modes/États
                             </button>
                         </div>
                     </div>
@@ -1740,13 +1448,13 @@
 
             if (viewLevel === 'system') {
                 newSrc = (modelKey === 'battery') ? "/images/diagram_charging_system_overview.png" : "/images/diagram_system_overview.png";
-                newTitle = "🏢 1. Vue d'Ensemble Système (Macro-organes & Flux Principaux)";
+                newTitle = "Niv. 0 — Vue d'Ensemble Système (Macro-organes & Flux Principaux)";
             } else if (viewLevel === 'action') {
                 newSrc = "/images/diagram_action_flow.png";
-                newTitle = "🔄 3. Déroulement Pas à Pas (Boucle d'Asservissement & Coupure)";
+                newTitle = "Niv. 2 — Modes/États (Boucle d'Asservissement & Coupure)";
             } else { // component
                 newSrc = (m && m.diagram_img) ? m.diagram_img : ((modelKey === 'battery') ? "/images/battery_ibd_rendered.png" : "/images/sysml_ibd_official_rendered.png");
-                newTitle = "⚙️ 2. Blocs Matériels & Échanges Physiques (Interfaces Typées)";
+                newTitle = "Niv. 1 — Blocs Matériels & Échanges Physiques (Interfaces Typées)";
             }
 
             if (imgEl) {

@@ -37,6 +37,9 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["sysmeasy*"]
 
+[tool.uv]
+package = false
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
