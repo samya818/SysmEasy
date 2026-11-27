@@ -42,6 +42,9 @@ static/generated/dyn_*.png
 # === Legacy demo PNGs (removed from tracking) ===
 static/*.png
 
+# === Node.js ELK layout dependencies ===
+elk_layout/node_modules/
+
 # === Temporary / scratch ===
 *.tmp
 *.bak

@@ -54,6 +54,9 @@ interface_agentic_sysml/
 # Install in editable mode (Python 3.11+)
 pip install -e ".[dev]"
 
+# Optional (recommended): install ELK (elkjs) for collision-free SysML diagram layouts (Node.js 18+)
+npm install --prefix elk_layout
+
 # Run the full test suite
 pytest tests/ -v
 

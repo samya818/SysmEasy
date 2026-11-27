@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 from sysmeasy.livrable2_pipeline import Livrable2Result
 from sysmeasy.methodology.diagram_selector import DiagramPlan, DiagramSpec
+from sysmeasy.methodology.elk_engine import render_ibd_with_elk, render_stm_with_elk
 
 
 def _render_context_bdd(result: Livrable2Result, output_path: str) -> None:
@@ -65,9 +66,16 @@ def _render_context_bdd(result: Livrable2Result, output_path: str) -> None:
 def _render_ibd(result: Livrable2Result, output_path: str) -> None:
     """Niveau 1: Internal Block Diagram with components, mass/power, ports and complete flow legend."""
     comps = result.components[:9]
+    conns = [cn for cn in result.connections if cn.get("from") and cn.get("to") and cn["from"] != cn["to"]]
+    summary_txt = f"Masse : {result.total_mass_kg:.1f} kg | Puissance : {result.total_power_w:.0f} W"
+    if result.autonomy_min is not None:
+        summary_txt += f" | Autonomie : {result.autonomy_min:.0f} min"
+
+    if render_ibd_with_elk(result.project_name, summary_txt, bool(result.soft_warnings), comps, conns, output_path):
+        return
+
     cols = 3
     rows = max(1, (len(comps) + cols - 1) // cols)
-    conns = [cn for cn in result.connections if cn.get("from") and cn.get("to") and cn["from"] != cn["to"]]
     use_legend = len(conns) > 4
 
     legend_rows = ((len(conns) + 2) // 3) if use_legend else 0
@@ -196,6 +204,8 @@ def _render_stm(result: Livrable2Result, raw_prompt: str, output_path: str, spec
     """Niveau 2: State Machine Diagram showing operational modes & wrapped transitions."""
     states = list(spec.states) if spec and len(spec.states) >= 2 else _extract_states(result, raw_prompt)
     guards = list(spec.transitions) if spec and spec.transitions else ["init_ok", "seuil / défaut", "urgence"]
+    if render_stm_with_elk(result.project_name, states, guards, output_path):
+        return
     fig, ax = plt.subplots(figsize=(11.5, 5.0), dpi=180)
     ax.set_xlim(0, 11.5)
     ax.set_ylim(0, 5.0)
