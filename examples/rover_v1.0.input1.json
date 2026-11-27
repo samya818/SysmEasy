@@ -1,0 +1,220 @@
+{
+  "hash_scope": "content_only",
+  "canonical_algorithm": "RFC8785_JCS",
+  "content": {
+    "contract_id": "CTR-ROV-2026-001",
+    "project_name": "Rover Tout-Terrain",
+    "version": "1.0",
+    "parent_sha256": null,
+    "timestamp_utc": "2026-11-26T14:45:00Z",
+    "requirements": [
+      {
+        "id": "REQ-01",
+        "name": "Autonomie opérationnelle",
+        "target": "Autonomie minimale en déplacement continu",
+        "numerical_val": 90.0,
+        "unit": "min",
+        "comparator": ">=",
+        "origin": "document",
+        "span": {
+          "span_id": "SP-01",
+          "page_idx": 2,
+          "bbox": [
+            50.0,
+            120.0,
+            400.0,
+            140.0
+          ],
+          "exact_quote": "Le rover doit assurer une autonomie minimale de 90 minutes en déplacement continu."
+        }
+      },
+      {
+        "id": "REQ-02",
+        "name": "Vitesse maximale",
+        "target": "Vitesse de pointe sur sol meuble",
+        "numerical_val": 1.5,
+        "unit": "m/s",
+        "comparator": "<=",
+        "origin": "document",
+        "span": {
+          "span_id": "SP-02",
+          "page_idx": 2,
+          "bbox": [
+            50.0,
+            160.0,
+            400.0,
+            180.0
+          ],
+          "exact_quote": "La vitesse de pointe en terrain meuble doit atteindre 1.5 m/s."
+        }
+      },
+      {
+        "id": "REQ-03",
+        "name": "Masse totale maximale",
+        "target": "Masse totale en ordre de marche",
+        "numerical_val": 25.0,
+        "unit": "kg",
+        "comparator": "<=",
+        "origin": "document",
+        "span": {
+          "span_id": "SP-03",
+          "page_idx": 3,
+          "bbox": [
+            50.0,
+            200.0,
+            400.0,
+            220.0
+          ],
+          "exact_quote": "La masse totale en ordre de marche ne doit pas excéder 25 kg."
+        }
+      },
+      {
+        "id": "REQ-04",
+        "name": "Tension de bus",
+        "target": "Tension nominale du bus d alimentation CC",
+        "numerical_val": 24.0,
+        "unit": "V",
+        "comparator": "==",
+        "origin": "human_clarification",
+        "span": null
+      }
+    ],
+    "components": [
+      {
+        "name": "ChassisStructure",
+        "category": "part",
+        "mass_kg": 8.5,
+        "power_w": 0.0,
+        "ports": []
+      },
+      {
+        "name": "LocomotionSubsystem",
+        "category": "actuator",
+        "mass_kg": 2.48,
+        "power_w": 280.0,
+        "ports": [
+          {
+            "name": "power_in_24v",
+            "direction": "in",
+            "domain": "electrical",
+            "unit": "V"
+          }
+        ]
+      },
+      {
+        "name": "PowerSubsystem",
+        "category": "part",
+        "mass_kg": 6.2,
+        "power_w": 0.0,
+        "ports": [
+          {
+            "name": "power_out_24v",
+            "direction": "out",
+            "domain": "electrical",
+            "unit": "V"
+          }
+        ]
+      },
+      {
+        "name": "NavigationComputer",
+        "category": "controller",
+        "mass_kg": 0.95,
+        "power_w": 45.0,
+        "ports": [
+          {
+            "name": "power_in_24v",
+            "direction": "in",
+            "domain": "electrical",
+            "unit": "V"
+          },
+          {
+            "name": "telemetry_out",
+            "direction": "out",
+            "domain": "data",
+            "unit": "string"
+          }
+        ]
+      },
+      {
+        "name": "LidarSensor",
+        "category": "sensor",
+        "mass_kg": 0.83,
+        "power_w": 15.0,
+        "ports": [
+          {
+            "name": "power_in_24v",
+            "direction": "in",
+            "domain": "electrical",
+            "unit": "V"
+          }
+        ]
+      },
+      {
+        "name": "CablingAndFixings",
+        "category": "part",
+        "mass_kg": 3.84,
+        "power_w": 0.0,
+        "ports": []
+      }
+    ],
+    "constraints": [
+      {
+        "target": "mass_total_kg",
+        "operator": "<=",
+        "limit": 25.0,
+        "unit": "kg"
+      },
+      {
+        "target": "voltage_nominal_v",
+        "operator": "==",
+        "limit": 24.0,
+        "unit": "V"
+      },
+      {
+        "target": "autonomy_minutes",
+        "operator": ">=",
+        "limit": 90.0,
+        "unit": "min"
+      }
+    ],
+    "human_decisions": [
+      {
+        "decision_id": "DEC-01",
+        "timestamp": "2026-11-26T14:30:00Z",
+        "author": "Ingénieur Système (ENSAM)",
+        "justification": "Arbitrage standard robotique mobile",
+        "impacted_element": "REQ-04",
+        "previous_val": null,
+        "new_val": {
+          "target": "voltage_nominal_v",
+          "value": 24.0,
+          "unit": "V"
+        }
+      },
+      {
+        "decision_id": "DEC-02",
+        "timestamp": "2026-11-26T14:45:00Z",
+        "author": "Ingénieur Système (ENSAM)",
+        "justification": "Bascule sur pack 28 Ah suite à alerte douce Module 5 pour respecter REQ-01 (autonomie >= 90 min sous 340 W)",
+        "impacted_element": "PowerSubsystem",
+        "previous_val": {
+          "component": "PowerSubsystem",
+          "part_ref": "BATT-LFP-20AH-24V",
+          "capacity_ah": 20,
+          "mass_kg": 4.8,
+          "energy_wh": 408.0,
+          "computed_autonomy_min": 72.0
+        },
+        "new_val": {
+          "component": "PowerSubsystem",
+          "part_ref": "BATT-LFP-28AH-24V",
+          "capacity_ah": 28,
+          "mass_kg": 6.2,
+          "energy_wh": 571.2,
+          "computed_autonomy_min": 100.8
+        }
+      }
+    ]
+  },
+  "canonical_sha256": "1c8d8832059300e063a676c9b8b9475fca923d1ccee7527ec368f051afc43871"
+}

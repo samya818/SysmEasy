@@ -24,7 +24,13 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from mbse_universal_engine import MBSEUniversalInvariantEngine, DOMAINS_TAXONOMY
-from report_generator import generate_executive_pdf_report
+from report_generator import generate_dynamic_pdf_report, generate_executive_pdf_report
+from sysmeasy.contracts.llm_provider import _load_dotenv, set_gemini_api_key
+from sysmeasy.elicitation.nl_parser import is_structured_cdc
+from sysmeasy.livrable2_pipeline import run_livrable2_pipeline
+from sysmeasy.methodology import render_selected_diagrams, select_diagrams
+
+DYNAMIC_REPORTS: dict[str, dict] = {}
 
 import matplotlib
 matplotlib.use('Agg')
@@ -67,6 +73,34 @@ class PipelineRequest(BaseModel):
     attached_file_name: str = ""
     attached_file_content: str = ""
     view_level: str = "component" # "system", "component", "action"
+
+class GeminiKeyRequest(BaseModel):
+    api_key: str
+
+
+@app.get("/api/config/gemini-key/status")
+async def get_gemini_key_status():
+    _load_dotenv()
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    masked = f"{key[:4]}…{key[-4:]}" if len(key) >= 10 else ("***" if key else "")
+    return JSONResponse({"configured": bool(key), "masked": masked})
+
+
+@app.post("/api/config/gemini-key")
+async def update_gemini_key(req: GeminiKeyRequest):
+    try:
+        models = set_gemini_api_key(req.api_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    key = req.api_key.strip()
+    masked = f"{key[:4]}…{key[-4:]}" if len(key) >= 10 else "***"
+    return JSONResponse({
+        "success": True,
+        "masked": masked,
+        "active_model": models[0] if models else "gemini-2.5-flash",
+        "message": f"Clé Gemini validée ({models[0] if models else 'gemini'} actif).",
+    })
+
 
 @app.get("/")
 async def root():
@@ -147,7 +181,10 @@ async def export_pdf_report(model_key: str, doc_name: Optional[str] = None):
     pdf_filename = f"rapport_synthese_metier_{model_key}.pdf"
     pdf_path = os.path.join(GENERATED_DIR, pdf_filename)
     try:
-        generate_executive_pdf_report(model_key, pdf_path, doc_name=doc_name)
+        if model_key in DYNAMIC_REPORTS:
+            generate_dynamic_pdf_report(DYNAMIC_REPORTS[model_key], pdf_path, doc_name=doc_name)
+        else:
+            generate_executive_pdf_report(model_key, pdf_path, doc_name=doc_name)
         return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_filename)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la génération du rapport PDF : {str(e)}")
@@ -157,11 +194,150 @@ async def export_pdf_report(model_key: str, doc_name: Optional[str] = None):
 # MOTEUR GÉNÉRALISABLE D'EXTRACTION SÉMANTIQUE & RENDU DYNAMIQUE
 # =============================================================================
 
+def _render_dynamic_ibd(project_name: str, components: list[dict], physics, output_path: str) -> None:
+    """Render a clean SysML v2 IBD overview diagram for dynamically parsed specifications."""
+    fig, ax = plt.subplots(figsize=(10, 5.4), dpi=180)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 5.4)
+    ax.axis("off")
+
+    frame = patches.FancyBboxPatch((0.2, 0.2), 9.6, 5.0, boxstyle="round,pad=0.08", fc="#F8FAFC", ec="#1E3A8A", lw=1.6)
+    ax.add_patch(frame)
+    ax.text(0.45, 4.9, f"ibd [part def] {project_name}Assembly", fontsize=11, fontweight="bold", color="#1E3A8A")
+    status_color = "#059669" if physics.status == "OK" else "#D97706"
+    ax.text(
+        9.55, 4.9,
+        f"M5: {physics.total_mass_kg:.1f} kg | {physics.total_power_w:.0f} W | {physics.autonomy_min:.1f} min [{physics.status}]",
+        ha="right", fontsize=8.5, fontweight="bold", color=status_color,
+    )
+
+    cols = 3
+    positions: dict[str, tuple[float, float]] = {}
+    for idx, comp in enumerate(components[:9]):
+        row, col = divmod(idx, cols)
+        x = 0.55 + col * 3.1
+        y = 3.35 - row * 1.45
+        positions[comp["name"]] = (x, y)
+        box = patches.FancyBboxPatch((x, y), 2.75, 1.05, boxstyle="round,pad=0.06", fc="#FFFFFF", ec="#3B82F6", lw=1.2)
+        ax.add_patch(box)
+        ax.text(x + 1.375, y + 0.78, comp["name"][:24], ha="center", va="center", fontsize=8.5, fontweight="bold", color="#0F172A")
+        ax.text(
+            x + 1.375, y + 0.48,
+            f"mass: {comp['mass_kg']} kg | power: {comp['power_w']} W",
+            ha="center", va="center", fontsize=7.5, color="#475569",
+        )
+        ports = comp.get("ports", [])
+        if ports:
+            port_lbl = ", ".join(f"{p['direction']}:{p['name']}" for p in ports[:2])
+            ax.text(x + 1.375, y + 0.20, f"[{port_lbl}]", ha="center", va="center", fontsize=6.8, color="#2563EB")
+
+    # Draw power flow arrows from out-port sources to in-port consumers
+    sources = [c for c in components[:9] if any(p.get("direction") == "out" for p in c.get("ports", []))]
+    sinks = [c for c in components[:9] if any(p.get("direction") == "in" for p in c.get("ports", []))]
+    if sources and sinks:
+        sx, sy = positions[sources[0]["name"]]
+        for sink in sinks:
+            tx, ty = positions[sink["name"]]
+            if (sx, sy) != (tx, ty):
+                ax.annotate(
+                    "", xy=(tx + 1.375, ty + 1.05), xytext=(sx + 1.375, sy),
+                    arrowprops=dict(arrowstyle="->", color="#F59E0B", lw=1.1, ls="--", alpha=0.8),
+                )
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=180, bbox_inches="tight")
+    plt.close(fig)
+
+
 def build_canonical_model_from_input(prompt: str, file_name: str, file_content: str, view_level: str = "component") -> dict:
     """
-    Agent 1 Généralisable : Analyse le texte ou le document technique pour bâtir
-    le Graphe Pivot Sémantique (IR), déterminer le type de vue et les contraintes formelles.
+    Livrable 2 + Motte Methodology Pipeline: runs on every input (no hardcoded powertrain/battery fallback).
     """
+    full_input = f"{prompt}\n{file_content}".strip()
+    if not full_input:
+        raise HTTPException(status_code=400, detail="Veuillez saisir un cahier des charges ou joindre un document.")
+
+    strict_llm = not bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    try:
+        result = run_livrable2_pipeline(full_input, strict_llm=strict_llm)
+        plan = select_diagrams(result, full_input, strict_llm=strict_llm)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+    project_name = result.project_name
+    slug = "".join(c.lower() if c.isalnum() else "_" for c in project_name).strip("_") or "custom"
+    model_key = f"dyn_{slug}"
+    diagrams = render_selected_diagrams(result, plan, GENERATED_DIR, raw_prompt=full_input)
+    ibd_diag = next((d for d in diagrams if d["type"] == "ibd"), diagrams[0])
+    primary_img_url = ibd_diag["img_url"]
+
+    summary_items = [
+        {
+            "name": comp.get("label", comp["name"]),
+            "role": f"Masse : {comp['mass_kg']} kg | Puissance : {comp['power_w']} W ({comp['category']})",
+            "icon": "cpu" if comp["power_w"] > 0 else "box",
+            "color": "text-blue-600" if comp["power_w"] > 0 else "text-slate-600",
+        }
+        for comp in result.components
+    ]
+    alerts = [
+        {"title": "Alerte physique (Agent 5)", "text": w, "severity": "SOFT_WARNING"}
+        for w in result.soft_warnings
+    ] + [
+        {"title": "Ambiguïté CDC à escalader", "text": amb, "severity": "À confirmer"}
+        for amb in result.ambiguities
+    ]
+
+    canonical = {
+        "title": f"{project_name} — Modèle SysML v2",
+        "badge": f"Méthode {plan.methodology} | {len(diagrams)} vues",
+        "model_key": model_key,
+        "methodology": plan.methodology,
+        "conops": result.conops,
+        "diagram_img": primary_img_url,
+        "diagrams": diagrams,
+        "metier": {
+            "title": f"Synthèse Ingénierie — {project_name}",
+            "summary": summary_items,
+            "pdf_references": [],
+            "alerts": alerts,
+        },
+        "sysml_code": result.sysml_code,
+        "traceability_rows": [
+            {
+                "id": t["id"],
+                "name": t["name"],
+                "expr": t["expr"],
+            }
+            for t in result.traceability
+        ],
+        "components": [
+            {"name": c["name"], "ports": c.get("ports", [])}
+            for c in result.components
+        ],
+        "connections": [],
+        "traceability": [
+            {"req_id": t["id"], "statement": t["name"], "constraint": t["expr"]}
+            for t in result.traceability
+        ],
+        "ebom": result.ebom,
+        "v2_pipeline": {
+            "final_status": "PASS" if result.passed else "SOFT_WARNING",
+            "satisfy_recall_pct": result.satisfy_recall_pct,
+            "syntax_ok": result.syntax_ok,
+            "syntax_errors": result.syntax_errors,
+            "physics": {
+                "total_mass_kg": result.total_mass_kg,
+                "total_power_w": result.total_power_w,
+                "autonomy_min": result.autonomy_min,
+                "status": "SOFT_WARNING" if result.soft_warnings else "OK",
+            },
+            "soft_warnings": result.soft_warnings,
+        },
+    }
+    DYNAMIC_REPORTS[model_key] = canonical
+    return canonical
+
     p_lower = (prompt + " " + file_name + " " + file_content).lower()
 
     # Détection du domaine dominant et des caractéristiques
@@ -631,7 +807,8 @@ async def run_pipeline_endpoint(req: PipelineRequest):
         })
 
     traceability_data = []
-    for tr in audit_report.get("traceability", []):
+    source_trace = canonical.get("traceability", []) if "v2_pipeline" in canonical else audit_report.get("traceability", [])
+    for tr in source_trace:
         traceability_data.append({
             "id": tr.get("req_id", "REQ-01"),
             "name": tr.get("statement", "Exigence système"),
@@ -654,8 +831,43 @@ async def run_pipeline_endpoint(req: PipelineRequest):
             "violations_tuples": audit_report["violations_tuples"]
         }
     }
+    if "v2_pipeline" in canonical:
+        v2 = canonical["v2_pipeline"]
+        response_payload["v2_pipeline"] = v2
+        response_payload["audit_report"]["passed"] = v2["final_status"] == "PASS"
 
     return JSONResponse(response_payload)
+
+
+class Input1VerifyRequest(BaseModel):
+    sealed_input1: dict
+    bus_voltage_v: float = 24.0
+    battery_capacity_ah: float = 28.0
+    dod: float = 0.85
+    max_mass_kg: float = 25.0
+    min_autonomy_min: float = 90.0
+
+
+@app.post("/api/v2/verify-input1")
+async def verify_input1_endpoint(req: Input1VerifyRequest):
+    """Run Livrable 2 pipeline verification on a raw prompt."""
+    raw_prompt = json.dumps(req.sealed_input1)
+    result = run_livrable2_pipeline(raw_prompt)
+    return JSONResponse({
+        "status": "PASS" if result.passed else "SOFT_WARNING",
+        "sysml_code": result.sysml_code,
+        "satisfy_recall_pct": result.satisfy_recall_pct,
+        "syntax_ok": result.syntax_ok,
+        "syntax_errors": result.syntax_errors,
+        "soft_warnings": result.soft_warnings,
+        "ambiguities": result.ambiguities,
+        "ebom": result.ebom,
+        "physics": {
+            "total_mass_kg": result.total_mass_kg,
+            "total_power_w": result.total_power_w,
+            "autonomy_min": result.autonomy_min,
+        },
+    })
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
