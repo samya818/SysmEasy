@@ -23,14 +23,26 @@ from sysmeasy.livrable2_pipeline import Livrable2Result
 
 VALID_DIAGRAM_TYPES = ("context_bdd", "uc", "ibd", "stm", "act", "par")
 
-MOTTE_METHODOLOGY_PROMPT = """Tu es un architecte MBSE expert en MagicGrid, HarmonySE et ARCADIA.
-À partir d'un cahier des charges résumé, choisis entre 2 et 4 diagrammes SysML pertinents (jamais plus de 4, sans redondance) selon ces règles :
-1. "context_bdd" (Vue Contexte / Système) : toujours utile en Niveau 0 pour situer le système, ses acteurs/interfaces externes et sa mission.
-2. "ibd" (Architecture Interne & Flux) : indispensable dès qu'il y a >= 2 sous-systèmes/composants ou des ports/flux (énergie, signal, vidéo, mécanique).
-3. "stm" (Machine à États / Modes) : à choisir (au lieu de "act") dès que le système décrit des modes, états ou transitions temporelles (démarrage, veille, mode éco, arrêt d'urgence, seuil de charge). Fournis alors "states" (3 à 4 états propres au système), "transitions" (déclencheurs concis uniquement, sans répéter "-> ÉtatCible") et "layout_direction" ("DOWN" si >= 4 états ou longs libellés pour tenir lisiblement sur A4, sinon "RIGHT").
-4. "act" (Diagramme d'Activité / Flux fonctionnel) : à choisir si le système décrit un enchaînement d'actions ou une boucle sans modes explicites.
-5. "par" (Bilan Paramétrique / Budgets) : à inclure uniquement si le cahier des charges impose des budgets numériques critiques (masse, puissance, autonomie).
-6. "uc" (Cas d'Utilisation) : à choisir seulement si plusieurs acteurs humains/externes interagissent avec des services distincts.
+MOTTE_METHODOLOGY_PROMPT = """Tu es un architecte MBSE expert en MagicGrid, HarmonySE et ARCADIA (4 piliers SysML : Requirements, Structure, Behavior, Parameters).
+À partir d'un cahier des charges résumé, choisis **3 diagrammes complémentaires par défaut** (2 si CDC simple/partiel, 4 max uniquement si budgets chiffrés ET modes sont tous deux critiques, jamais plus de 4, sans redondance) :
+
+Règle clé (Guo et al., 2022) :
+- Problem Domain (analyse amont) -> `act` pour les flux fonctionnels sans modes.
+- Solution Domain (conception système/sous-système) -> `stm` pour les modes/transitions + `ibd` pour les ports et flux physiques.
+
+Applique ces 4 profils de décision :
+- **Cas A — Système électromécanique / énergie / multi-composants** -> 3 vues (4 si `stm` + `par` critiques) : `context_bdd` (Niveau 0 boîte noire) + `ibd` (ports typés `out->in`, W, kg) + `par` (si budgets masse/puissance/autonomie) ou `act` (si boucle de contrôle).
+- **Cas B — Système commandé par modes / états / boucle d'asservissement** -> 3 vues : `context_bdd` (ou `uc`) + `ibd` (capteurs/contrôleur/actionneurs) + `stm` (états/modes et seuils/conditions de transition).
+- **Cas C — Système orienté connectivité, interfaces & contraintes produit** (type ARCADIA) -> 3 vues : `uc` (ou `context_bdd`) + `ibd` (interfaces vidéo/signal/puissance/thermique) + `stm` (ou `act` si séquence sans modes).
+- **Cas D — Demande simple / partielle sans comportement dynamique** -> 2 vues suffisent : `context_bdd` + `ibd`.
+
+Règles de contenu :
+1. "context_bdd" : vue Niveau 0 boîte noire (acteurs/environnement + exigences clés).
+2. "ibd" : indispensable dès >= 2 sous-systèmes ou ports/flux.
+3. "stm" : fournis "states" (3 à 4 états propres au système), "transitions" (déclencheurs concis uniquement, sans répéter "-> ÉtatCible") et "layout_direction" ("DOWN" si >= 4 états ou longs libellés pour tenir lisiblement sur A4, sinon "RIGHT").
+4. "act" : enchaînement d'actions sans modes explicites.
+5. "par" : uniquement si le CDC impose des budgets numériques critiques (masse, puissance, autonomie).
+6. "uc" : seulement si plusieurs acteurs humains/externes interagissent avec des services distincts.
 
 Réponds UNIQUEMENT en JSON valide sans jargon technique :
 {
