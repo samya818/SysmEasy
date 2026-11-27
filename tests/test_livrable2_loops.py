@@ -105,3 +105,30 @@ def test_livrable2_pipeline_auto_satisfaction():
     assert res.satisfy_recall_pct >= 95.0
     assert res.passed is True
     assert len(res.ebom) >= 1
+
+
+def test_agent1_rag_pointers_and_agent2_incose_rules():
+    """Verify Agent 1 RAG indexing and Agent 2 INCOSE detection (Livrable 2, p. 15-16)."""
+    from sysmeasy.elicitation.nl_parser import parse_cdc_to_input1
+
+    cdc = (
+        'Système "SolarBot".\n'
+        "Objectif : Nettoyage de modules solaires.\n"
+        "REQ-01 : Vitesse raisonnable pour préserver le verre.\n"
+        "REQ-02 : Batterie adaptée pour utilisation en extérieur.\n"
+        "Annexe A : Protocole d essais en laboratoire.\n"
+    )
+    env = parse_cdc_to_input1(cdc)
+    content = env["content"]
+
+    # Verify Agent 2 INCOSE detection (Choice 12 & Role Agent 2, p. 16)
+    ambs = content.get("ambiguities", [])
+    assert any("INCOSE" in a for a in ambs)
+    assert any("raisonnable" in a for a in ambs)
+    assert any("adaptée" in a for a in ambs)
+
+    # Verify Agent 1 RAG balisage sans trou noir (Role Agent 1, p. 15)
+    pointers = content.get("rag_pointers", [])
+    assert len(pointers) >= 1
+    assert any("Annexe" in p for p in pointers)
+

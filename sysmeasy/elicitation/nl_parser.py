@@ -222,6 +222,62 @@ def _try_llm_extraction(prompt: str, provider: LLMProvider | None, *, strict_llm
         return None
 
 
+def _detect_incose_vague_terms(text: str, requirements: list[dict[str, Any]]) -> list[str]:
+    """Detect non-measurable terms prohibited by the INCOSE Guide for Writing Requirements (Livrable 2, p. 16)."""
+    incose_alerts: list[str] = []
+    vague_lexicon = [
+        ("adapté", "adaptée"),
+        ("raisonnable", "vitesse raisonnable"),
+        ("optimal", "optimale"),
+        ("suffisant", "suffisante"),
+        ("bonne autonomie", "autonomie adéquate"),
+        ("rapide", "temps rapide"),
+        ("léger", "légère"),
+        ("robuste", "conception robuste"),
+        ("facile", "utilisation facile"),
+        ("environ", "sensiblement égal"),
+    ]
+    for r in requirements:
+        target_str = str(r.get("target") or r.get("name") or "").lower()
+        num_val = float(r.get("numerical_val") or 0.0)
+        if num_val == 0.0 or r.get("unit") == "spec":
+            for term_family in vague_lexicon:
+                for variant in term_family:
+                    if re.search(r"\b" + re.escape(variant) + r"\b", target_str):
+                        incose_alerts.append(
+                            f"Règle INCOSE R-VAG : Le terme non mesurable '{variant}' a été détecté dans {r.get('id', 'l exigence')}. "
+                            "Préciser une grandeur numérique cible avec unité de mesure."
+                        )
+                        break
+
+    if not incose_alerts:
+        prompt_lower = text.lower()
+        for term_family in vague_lexicon[:4]:
+            primary = term_family[0]
+            if re.search(r"\b" + re.escape(primary) + r"\b", prompt_lower):
+                incose_alerts.append(
+                    f"Règle INCOSE R-VAG : Le terme '{primary}' présent dans l'expression du besoin est imprécis. "
+                    "Préciser un seuil d'acceptation chiffré."
+                )
+    return incose_alerts[:4]
+
+
+def _extract_rag_pointers(prompt: str) -> list[str]:
+    """Identify secondary sections or annexes for targeted RAG retrieval without black holes (Livrable 2, p. 15)."""
+    pointers: list[str] = []
+    patterns = [
+        (r"(?:annexe|appendice)\s+([A-Z0-9]+[^\n.:]{0,40})", "Annexe source"),
+        (r"(?:protocole|procédure)\s+(?:d['’]essais?|[^\n.:]{3,35})", "Protocole d'essais"),
+        (r"(?:norme|standard)\s+(?:iso|ieee|en|nf|ce)\s*([0-9\-]+)", "Référence normative"),
+    ]
+    for pattern, label in patterns:
+        for match in re.finditer(pattern, prompt, re.IGNORECASE):
+            matched_text = match.group(0).strip()
+            if matched_text and len(matched_text) < 60:
+                pointers.append(f"[{label}] {matched_text} (balisé pour consultation ciblée)")
+    return pointers[:4]
+
+
 def _safe_float(val: Any, default: float = 0.0) -> float:
     if val is None or val == "":
         return default
@@ -287,6 +343,8 @@ def parse_cdc_to_input1(
             for cn in (llm_data.get("connections") or [])
         ] or _infer_connections(comps)
         params = llm_data.get("physics_params") or {}
+        incose_ambs = _detect_incose_vague_terms(prompt, reqs)
+        rag_ptrs = _extract_rag_pointers(prompt)
         content = {
             "contract_id": f"CTR-{_slugify_part_name(resolved_name).upper()[:8]}-2026",
             "project_name": resolved_name,
@@ -302,7 +360,8 @@ def parse_cdc_to_input1(
             "requirements": reqs,
             "components": comps,
             "connections": conns,
-            "ambiguities": [str(a) for a in llm_data.get("ambiguities", [])],
+            "ambiguities": [str(a) for a in llm_data.get("ambiguities", [])] + incose_ambs,
+            "rag_pointers": rag_ptrs,
         }
         return {
             "hash_scope": "content_only",
@@ -480,9 +539,13 @@ def parse_cdc_to_input1(
         if "réservoir" in prompt.lower():
             ambiguities.append("Masse du réservoir donnée à vide uniquement : masse de liquide/charge utile manquante.")
 
+    ambiguities += _detect_incose_vague_terms(prompt, requirements)
+    rag_ptrs = _extract_rag_pointers(prompt)
+
     content = {
         "contract_id": f"CTR-{_slugify_part_name(resolved_name).upper()[:8]}-2026",
         "project_name": resolved_name,
+        "conops": f"Système {resolved_name} formalisé d'après le besoin exprimé.",
         "version": "1.0",
         "parent_sha256": None,
         "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -495,6 +558,7 @@ def parse_cdc_to_input1(
         "components": components,
         "connections": _infer_connections(components),
         "ambiguities": ambiguities,
+        "rag_pointers": rag_ptrs,
     }
     return {
         "hash_scope": "content_only",
