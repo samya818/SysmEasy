@@ -73,11 +73,12 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
                 nums = tuple(int(n) for n in re.findall(r"\d+", name)) or (0,)
                 return (is_stable, is_flash, nums)
             ordered = sorted(candidates, key=_score, reverse=True)
-            # Prefer proven 2.5-flash ahead of experimental 3.x if present, while keeping all candidates
-            if "gemini-2.5-flash" in ordered:
-                ordered.remove("gemini-2.5-flash")
-                ordered.insert(0, "gemini-2.5-flash")
-            _CACHED_GEMINI_MODELS = ordered[:10]
+            # Prioritize proven fast Flash models (2.5-flash, 2.5-flash-lite, 2.0-flash)
+            for preferred_m in reversed(["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]):
+                if preferred_m in ordered:
+                    ordered.remove(preferred_m)
+                    ordered.insert(0, preferred_m)
+            _CACHED_GEMINI_MODELS = ordered[:3]
             return _CACHED_GEMINI_MODELS
     except Exception:
         pass
@@ -123,13 +124,18 @@ class EnvChatProvider:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=60) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                 _LAST_WORKING_GEMINI_MODEL = mdl
                 return LLMResponse(content=data["choices"][0]["message"]["content"], model=mdl)
             except urllib.error.HTTPError as exc:
                 last_exc = exc
                 if exc.code in (404, 429, 500, 503) and idx < len(models_to_try) - 1:
+                    continue
+                raise
+            except (urllib.error.URLError, TimeoutError) as exc:
+                last_exc = exc
+                if idx < len(models_to_try) - 1:
                     continue
                 raise
         raise last_exc or RuntimeError("Aucun modèle LLM disponible.")
