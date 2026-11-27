@@ -4,6 +4,7 @@ Projet : SysmEasy — ENSAM Meknès (S. Loukili & K. El Khaniri)
 """
 
 import os
+import textwrap
 from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -13,6 +14,7 @@ from reportlab.platypus import (
     Image as RLImage,
     PageBreak,
     Paragraph,
+    Preformatted,
     SimpleDocTemplate,
     Spacer,
     Table,
@@ -33,7 +35,35 @@ def _styles():
         "bold": ParagraphStyle("BB", parent=base["Normal"], fontSize=9.5, leading=13.5, textColor=colors.HexColor("#0F172A"), fontName="Helvetica-Bold"),
         "note": ParagraphStyle("N", parent=base["Normal"], fontSize=9, leading=13, textColor=colors.HexColor("#1E3A8A"), fontName="Helvetica"),
         "warn": ParagraphStyle("W", parent=base["Normal"], fontSize=9, leading=13, textColor=colors.HexColor("#92400E"), fontName="Helvetica"),
+        "code_hdr": ParagraphStyle("CH", parent=base["Normal"], fontSize=9, leading=12, textColor=colors.HexColor("#0F172A"), fontName="Helvetica-Bold", spaceBefore=4, spaceAfter=3),
+        "code": ParagraphStyle(
+            "CODE",
+            parent=base["Code"],
+            fontName="Courier",
+            fontSize=7.5,
+            leading=10,
+            textColor=colors.HexColor("#0F172A"),
+            backColor=colors.HexColor("#F8FAFC"),
+            borderColor=colors.HexColor("#CBD5E1"),
+            borderWidth=0.6,
+            borderPadding=6,
+        ),
     }
+
+
+def _wrap_sysml_code(code: str, width: int = 92) -> str:
+    """Wrap long SysML lines while preserving indentation for clean PDF rendering."""
+    wrapped_lines: list[str] = []
+    for raw_line in code.splitlines():
+        if len(raw_line) <= width:
+            wrapped_lines.append(raw_line)
+        else:
+            indent = len(raw_line) - len(raw_line.lstrip(" "))
+            sub_indent = " " * min(indent + 4, 24)
+            wrapped_lines.extend(
+                textwrap.wrap(raw_line, width=width, subsequent_indent=sub_indent, break_long_words=True)
+            )
+    return "\n".join(wrapped_lines)
 
 
 def _resolve_img_path(diag: dict) -> str | None:
@@ -53,6 +83,7 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
 
     raw_title = str(canonical.get("title", "Système")).split("—")[0].strip()
     conops = str(canonical.get("conops", "")).strip()
+    sysml_code = str(canonical.get("sysml_code", "")).strip()
     metier = canonical.get("metier", {})
     alerts = metier.get("alerts", [])
     diagrams = canonical.get("diagrams", [])
@@ -121,6 +152,11 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
         if diag.get("comment"):
             story.append(Paragraph(diag["comment"], st["note"]))
             story.append(Spacer(1, 8))
+        diag_sysml = str(diag.get("sysml_code") or sysml_code).strip()
+        if diag_sysml:
+            story.append(Paragraph(f"{idx}.1. Code SysML v2 associé", st["code_hdr"]))
+            story.append(Preformatted(_wrap_sysml_code(diag_sysml), st["code"]))
+            story.append(Spacer(1, 10))
 
     # 4. Points d'Arbitrage & Recommandations (les tables brutes eBOM et Exigences sont retirées du rapport employé)
     story.append(PageBreak())

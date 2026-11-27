@@ -98,4 +98,30 @@ def test_plantuml_source_and_png_rendering(tmp_path):
     assert out_png.read_bytes().startswith(b"\x89PNG")
 
 
+def test_pdf_report_embeds_sysml_code_below_each_diagram(tmp_path):
+    import fitz
+    from report_generator import generate_dynamic_pdf_report
+
+    pdf_path = tmp_path / "report.pdf"
+    canonical = {
+        "title": "SmartValve",
+        "conops": "Réguler un débit hydraulique.",
+        "sysml_code": "package 'SmartValve' {\n    part def ValveActuator {\n        attribute mass_kg : Real = 2.0;\n    }\n}",
+        "metier": {"alerts": []},
+        "diagrams": [
+            {"type": "context_bdd", "title": "Contexte", "comment": "Vue globale."},
+            {"type": "ibd", "title": "Architecture", "comment": "Vue interne."},
+        ],
+    }
+    generate_dynamic_pdf_report(canonical, str(pdf_path), doc_name="SmartValve")
+    assert pdf_path.is_file()
+
+    doc = fitz.open(str(pdf_path))
+    full_text = "\n".join(page.get_text() for page in doc)
+    doc.close()
+    assert full_text.count("Code SysML v2 associé") == 2
+    assert "part def ValveActuator" in full_text
+
+
+
 
