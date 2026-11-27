@@ -39,6 +39,9 @@ static/generated/gen_*.png
 static/generated/dyn_*.png
 !static/generated/.gitkeep
 
+# === Legacy demo PNGs (removed from tracking) ===
+static/*.png
+
 # === Temporary / scratch ===
 *.tmp
 *.bak
