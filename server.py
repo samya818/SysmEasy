@@ -39,10 +39,6 @@ from sysmeasy.methodology import render_selected_diagrams, select_diagrams
 
 DYNAMIC_REPORTS: dict[str, dict] = {}
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 app = FastAPI(
     title="SysmEasy - Studio d'IngÃ©nierie SystÃ¨me SysML v2",
@@ -377,74 +373,6 @@ def build_canonical_model_from_input(
     DYNAMIC_REPORTS[model_key] = canonical
     return canonical
 
-
-def render_braking_diagram(output_path: str):
-    """GÃ©nÃ¨re un diagramme IBD haute dÃ©finition pour le systÃ¨me de freinage."""
-    fig, ax = plt.subplots(figsize=(13, 8))
-    fig.patch.set_facecolor('#F8FAFC')
-    ax.set_facecolor('#FFFFFF')
-    ax.set_xlim(0, 13)
-    ax.set_ylim(0, 8)
-    ax.axis('off')
-
-    # Titre gÃ©nÃ©ral
-    ax.text(6.5, 7.6, "SysML v2 Internal Block Diagram (IBD) : Emergency_Braking_System", 
-            ha='center', va='center', fontsize=13, fontweight='bold', color='#0F172A')
-    ax.text(6.5, 7.2, "ModÃ¨le SÃ©mantique VÃ©rifiÃ© par Invariants MBSE (Standard OMG SysML v2)", 
-            ha='center', va='center', fontsize=9.5, style='italic', color='#475569')
-
-    # Frame officiel
-    frame = patches.FancyBboxPatch((0.6, 0.5), 11.8, 6.4, boxstyle="square,pad=0.1", 
-                                  facecolor='#FAFAFA', edgecolor='#334155', linewidth=2.2)
-    ax.add_patch(frame)
-    header = patches.Rectangle((0.6, 6.4), 4.6, 0.5, facecolor='#E2E8F0', edgecolor='#334155', linewidth=1.5)
-    ax.add_patch(header)
-    ax.text(0.8, 6.65, "ibd [part def] BrakingContext", fontsize=9.5, fontweight='bold', color='#1E293B')
-
-    # Radar
-    box_radar = patches.FancyBboxPatch((1.2, 3.2), 3.0, 2.2, boxstyle="round,pad=0.1,rounding_size=0.1", 
-                                       facecolor='#FEF3C7', edgecolor='#D97706', linewidth=2)
-    ax.add_patch(box_radar)
-    ax.text(2.7, 4.8, "part radar", ha='center', va='center', fontsize=10.5, fontweight='bold', color='#92400E')
-    ax.text(2.7, 4.4, ": RadarSensor (77 GHz)", ha='center', va='center', fontsize=9, style='italic', color='#B45309')
-    ax.text(2.7, 3.5, "Status: CONNECTED_ACTIVE", ha='center', va='center', fontsize=7.5, fontweight='bold', color='#15803D')
-
-    port_r = patches.Rectangle((3.9, 4.1), 0.35, 0.35, facecolor='#10B981', edgecolor='#065F46', linewidth=1.5)
-    ax.add_patch(port_r)
-    ax.text(3.75, 4.28, "out cmd : ControlSignal", fontsize=7.5, fontweight='bold', color='#065F46', ha='right', va='center')
-
-    # ECU
-    box_ecu = patches.FancyBboxPatch((7.8, 3.2), 3.4, 2.2, boxstyle="round,pad=0.1,rounding_size=0.1", 
-                                     facecolor='#EFF6FF', edgecolor='#2563EB', linewidth=2)
-    ax.add_patch(box_ecu)
-    ax.text(9.5, 4.8, "part ecu", ha='center', va='center', fontsize=10.5, fontweight='bold', color='#1E3A8A')
-    ax.text(9.5, 4.4, ": BrakingECU", ha='center', va='center', fontsize=9, style='italic', color='#2563EB')
-    ax.text(9.5, 3.5, "satisfy REQ-BRAKE-01", ha='center', va='center', fontsize=8, fontweight='bold', color='#16A34A')
-
-    port_e = patches.Rectangle((7.65, 4.1), 0.35, 0.35, facecolor='#10B981', edgecolor='#065F46', linewidth=1.5)
-    ax.add_patch(port_e)
-    ax.text(8.15, 4.28, "in cmd : ControlSignal", fontsize=7.5, fontweight='bold', color='#065F46', ha='left', va='center')
-
-    # Liaison
-    ax.annotate('', xy=(7.65, 4.28), xytext=(4.25, 4.28),
-                arrowprops=dict(arrowstyle="->", color='#2563EB', lw=3, shrinkA=0, shrinkB=0))
-    flow_box = patches.FancyBboxPatch((4.7, 4.45), 2.5, 0.8, boxstyle="round,pad=0.1,rounding_size=0.08", 
-                                      facecolor='#EFF6FF', edgecolor='#3B82F6', linewidth=1.5)
-    ax.add_patch(flow_box)
-    ax.text(5.95, 4.95, "flow of ControlSignal [CAN/PWM]", ha='center', va='center', fontsize=8, fontweight='bold', color='#1D4ED8')
-    ax.text(5.95, 4.65, "Direction: out â”€â”€> in (Valide)", ha='center', va='center', fontsize=7.5, color='#2563EB')
-
-    # Actuator (Standalone / Spare)
-    box_act = patches.FancyBboxPatch((7.8, 1.0), 3.4, 1.8, boxstyle="round,pad=0.1,rounding_size=0.1", 
-                                     facecolor='#F8FAFC', edgecolor='#94A3B8', linewidth=1.8, linestyle='--')
-    ax.add_patch(box_act)
-    ax.text(9.5, 2.3, "part actuator : HydraulicActuator", ha='center', va='center', fontsize=9.5, fontweight='bold', color='#475569')
-    ax.text(9.5, 1.9, "Statut : INTENTIONALLY_STANDALONE", ha='center', va='center', fontsize=7.5, fontweight='bold', color='#D97706')
-    ax.text(9.5, 1.4, "Actionneur autonome de rÃ©serve", ha='center', va='center', fontsize=7.5, style='italic', color='#64748B')
-
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200, bbox_inches='tight')
-    plt.close()
 
 
 @app.post("/api/run-pipeline")

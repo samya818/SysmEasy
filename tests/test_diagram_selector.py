@@ -75,37 +75,27 @@ def test_agrowing_s2_excludes_editorial_sections_and_extracts_connections():
     assert any(r["unit"] == "kg" and r["numerical_val"] == 2.8 for r in res.requirements)
 
 
-def test_elk_layout_renders_non_overlapping_ibd(tmp_path):
-    from sysmeasy.methodology.elk_engine import is_elk_available, run_elk_layout
+def test_plantuml_source_and_png_rendering(tmp_path):
+    from sysmeasy.methodology.diagram_renderer import build_plantuml_source, render_plantuml_to_png
 
-    assert is_elk_available(), "elkjs should be installed in elk_layout/"
-    graph = {
-        "id": "root",
-        "layoutOptions": {
-            "elk.algorithm": "layered",
-            "elk.direction": "RIGHT",
-            "elk.edgeRouting": "ORTHOGONAL",
-            "elk.spacing.nodeNode": "40",
-        },
-        "children": [
-            {"id": f"n{i}", "width": 200, "height": 90} for i in range(6)
-        ],
-        "edges": [
-            {"id": "e1", "sources": ["n0"], "targets": ["n1"]},
-            {"id": "e2", "sources": ["n0"], "targets": ["n2"]},
-            {"id": "e3", "sources": ["n1"], "targets": ["n3"]},
-            {"id": "e4", "sources": ["n2"], "targets": ["n4"]},
-            {"id": "e5", "sources": ["n3"], "targets": ["n5"]},
-        ],
-    }
-    layouted = run_elk_layout(graph)
-    assert layouted is not None
-    boxes = [(c["x"], c["y"], c["x"] + c["width"], c["y"] + c["height"]) for c in layouted["children"]]
-    for i in range(len(boxes)):
-        for j in range(i + 1, len(boxes)):
-            ax1, ay1, ax2, ay2 = boxes[i]
-            bx1, by1, bx2, by2 = boxes[j]
-            overlap = (ax1 < bx2 and ax2 > bx1) and (ay1 < by2 and ay2 > by1)
-            assert not overlap, f"ELK nodes {i} and {j} overlapped: {boxes[i]} vs {boxes[j]}"
+    prompt = (
+        '### Cahier des charges — "SmartValve"\n'
+        "- Objectif : Réguler un débit hydraulique.\n"
+        "- REQ-01 : pression max <= 10 bar.\n"
+        "- Capteur pression : 0.5 kg, 5 W.\n"
+        "- Actionneur vanne : 2.0 kg, 25 W.\n"
+    )
+    res = run_livrable2_pipeline(prompt)
+    for dtype in ("context_bdd", "ibd", "stm", "act", "par"):
+        puml = build_plantuml_source(res, dtype, raw_prompt=prompt)
+        assert puml.startswith("@startuml")
+        assert puml.endswith("@enduml")
+
+    out_png = tmp_path / "smartvalve_ibd.png"
+    ibd_puml = build_plantuml_source(res, "ibd", raw_prompt=prompt)
+    render_plantuml_to_png(ibd_puml, str(out_png))
+    assert out_png.is_file()
+    assert out_png.read_bytes().startswith(b"\x89PNG")
+
 
 
