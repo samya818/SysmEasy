@@ -6,6 +6,7 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -49,18 +50,22 @@ def _load_dotenv() -> None:
 
 
 def _resolve_gemini_models(api_key: str) -> list[str]:
-    """Query Google's /models endpoint and return available Gemini models ordered by preference."""
+    """Query Google's REST /models endpoint and return available Gemini models ordered by preference.
+
+    Uses the native REST API (key= param) which always returns JSON — avoids the OpenAI-compat
+    endpoint that may return HTML on errors.
+    """
     global _CACHED_GEMINI_MODELS
     if _CACHED_GEMINI_MODELS:
         return _CACHED_GEMINI_MODELS
     try:
-        req = urllib.request.Request(
-            "https://generativelanguage.googleapis.com/v1beta/openai/models",
-            headers={"Authorization": f"Bearer {api_key}"},
-        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={urllib.parse.quote(api_key, safe='')}"
+        req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        ids = [str(m.get("id", "")).removeprefix("models/") for m in data.get("data", [])]
+            raw = resp.read().decode("utf-8")
+        data = json.loads(raw)
+        # REST response: {"models": [{"name": "models/gemini-2.0-flash", ...}, ...]}
+        ids = [str(m.get("name", "")).removeprefix("models/") for m in data.get("models", [])]
         candidates = [
             mid for mid in ids
             if mid.startswith("gemini-")
@@ -73,8 +78,8 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
                 nums = tuple(int(n) for n in re.findall(r"\d+", name)) or (0,)
                 return (is_stable, is_flash, nums)
             ordered = sorted(candidates, key=_score, reverse=True)
-            # Prioritize proven fast Flash models (3.5-flash-lite, 3.5-flash, 3.6-flash)
-            for preferred_m in reversed(["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]):
+            # Prioritize proven fast Flash models
+            for preferred_m in reversed(["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]):
                 if preferred_m in ordered:
                     ordered.remove(preferred_m)
                     ordered.insert(0, preferred_m)
@@ -82,7 +87,7 @@ def _resolve_gemini_models(api_key: str) -> list[str]:
             return _CACHED_GEMINI_MODELS
     except Exception:
         pass
-    return [os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")]
+    return [os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")]
 
 
 class EnvChatProvider:
@@ -186,15 +191,21 @@ def set_gemini_api_key(api_key: str) -> list[str]:
     if not clean_key:
         raise ValueError("La clé API Gemini ne peut pas être vide.")
 
-    req = urllib.request.Request(
-        "https://generativelanguage.googleapis.com/v1beta/openai/models",
-        headers={"Authorization": f"Bearer {clean_key}"},
-    )
+    # Validate key against the native REST endpoint (always returns JSON)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={urllib.parse.quote(clean_key, safe='')}&pageSize=1"
+    req = urllib.request.Request(url)
     try:
         with urllib.request.urlopen(req, timeout=12) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            json.loads(resp.read().decode("utf-8"))  # just check it parses
     except urllib.error.HTTPError as exc:
-        raise ValueError(f"Clé API refusée par Google Gemini (HTTP {exc.code}).") from exc
+        body = ""
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+            err_data = json.loads(body)
+            msg = err_data.get("error", {}).get("message", f"HTTP {exc.code}")
+        except Exception:
+            msg = f"HTTP {exc.code}"
+        raise ValueError(f"Clé API refusée par Google Gemini : {msg}") from exc
     except Exception as exc:
         raise ValueError(f"Impossible de vérifier la clé Gemini : {exc}") from exc
 
