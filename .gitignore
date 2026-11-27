@@ -14,6 +14,7 @@ dist/
 venv/
 .venv/
 env/
+.env
 ENV/
 .conda/
 
@@ -35,6 +36,7 @@ coverage.xml
 # === Generated outputs (keep example seeds via .gitkeep) ===
 static/generated/*.pdf
 static/generated/gen_*.png
+static/generated/dyn_*.png
 !static/generated/.gitkeep
 
 # === Temporary / scratch ===
