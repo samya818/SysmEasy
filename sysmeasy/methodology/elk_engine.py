@@ -154,19 +154,21 @@ def render_ibd_with_elk(
 
     elk_edges: list[dict[str, Any]] = []
     legend_items: list[str] = []
-    for idx, cn in enumerate(conns, start=1):
+    flow_idx = 0
+    for cn in conns:
         src, dst = cn.get("from", ""), cn.get("to", "")
         if src not in comp_map or dst not in comp_map or src == dst:
             continue
+        flow_idx += 1
         domain = cn.get("domain", "data")
         lbl = cn.get("label") or ("data" if domain == "data" else "power")
-        badge = f"F{idx}" if use_legend else lbl[:22]
+        badge = f"F{flow_idx}" if use_legend else lbl[:22]
         if use_legend:
-            legend_items.append(f"F{idx}: {lbl}")
+            legend_items.append(f"F{flow_idx}: {lbl}")
         src_port = _pick_port(src, "EAST", domain)
         dst_port = _pick_port(dst, "WEST", domain)
         elk_edges.append({
-            "id": f"e{idx}",
+            "id": f"e{flow_idx}",
             "sources": [src_port],
             "targets": [dst_port],
             "labels": [{"text": badge, "width": max(26, len(badge) * 7.2 + 8), "height": 16}],
@@ -199,9 +201,9 @@ def render_ibd_with_elk(
     gh = max(float(layouted.get("height", 400)), 280.0)
     header_h = 54.0
     legend_rows = ((len(legend_items) + 2) // 3) if legend_items else 0
-    legend_h = (22.0 * legend_rows + 28.0) if legend_items else 0.0
+    legend_h = (24.0 * legend_rows + 32.0) if legend_items else 0.0
     total_w = gw + 40.0
-    total_h = header_h + gh + legend_h + 24.0
+    total_h = header_h + gh + legend_h + 32.0
 
     fig_w = max(10.0, min(16.0, total_w / 82.0))
     fig_h = fig_w * (total_h / total_w)
@@ -267,10 +269,10 @@ def render_ibd_with_elk(
         )
 
         for port in node.get("ports", []):
-            px = offset_x + float(port["x"])
+            px = nx + float(port.get("x", 0))
             pw = float(port.get("width", 10))
             ph = float(port.get("height", 10))
-            py = total_h - (offset_y + float(port["y"]) + ph)
+            py = total_h - (offset_y + float(node["y"]) + float(port.get("y", 0)) + ph)
             pmeta = ports_meta_by_id.get(port["id"], {})
             pcol = "#2563EB" if pmeta.get("domain") == "data" else "#D97706"
             pbox = patches.Rectangle((px, py), pw, ph, fc="#EFF6FF", ec=pcol, lw=1.1, zorder=5)
@@ -278,9 +280,9 @@ def render_ibd_with_elk(
 
     # Full 3-column flow legend at the bottom
     if legend_items:
-        leg_y0 = 16.0
+        leg_y0 = 18.0
         leg_box = patches.FancyBboxPatch(
-            (20, leg_y0), total_w - 40, legend_h - 6, boxstyle="round,pad=3",
+            (20, leg_y0), total_w - 40, legend_h - 4, boxstyle="round,pad=3",
             fc="#FFFFFF", ec="#CBD5E1", lw=0.9, zorder=2,
         )
         ax.add_patch(leg_box)
@@ -288,7 +290,7 @@ def render_ibd_with_elk(
         for i, item in enumerate(legend_items):
             r_idx, c_idx = divmod(i, 3)
             lx = 32 + c_idx * col_w
-            ly = (leg_y0 + legend_h - 20) - r_idx * 20.0
+            ly = (leg_y0 + legend_h - 20) - r_idx * 22.0
             ax.text(lx, ly, item[:38], ha="left", va="center", fontsize=7.0, color="#334155", zorder=4)
 
     plt.tight_layout()
@@ -342,10 +344,14 @@ def render_stm_with_elk(
             "elk.algorithm": "layered",
             "elk.direction": "RIGHT",
             "elk.edgeRouting": "ORTHOGONAL",
+            "elk.layered.cycleBreaking.strategy": "MODEL_ORDER",
+            "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
+            "elk.layered.edgeLabels.sideSelection": "ALWAYS_UP",
             "elk.spacing.nodeNode": "44",
-            "elk.layered.spacing.nodeNodeBetweenLayers": "78",
-            "elk.spacing.edgeNode": "24",
-            "elk.padding": "[top=24,left=24,bottom=24,right=24]",
+            "elk.layered.spacing.nodeNodeBetweenLayers": "68",
+            "elk.spacing.edgeNode": "26",
+            "elk.spacing.edgeLabel": "10",
+            "elk.padding": "[top=30,left=24,bottom=34,right=24]",
         },
         "children": elk_nodes,
         "edges": elk_edges,

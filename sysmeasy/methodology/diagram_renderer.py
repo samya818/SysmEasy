@@ -65,7 +65,7 @@ def _render_context_bdd(result: Livrable2Result, output_path: str) -> None:
 
 def _render_ibd(result: Livrable2Result, output_path: str) -> None:
     """Niveau 1: Internal Block Diagram with components, mass/power, ports and complete flow legend."""
-    comps = result.components[:9]
+    comps = result.components[:14]
     conns = [cn for cn in result.connections if cn.get("from") and cn.get("to") and cn["from"] != cn["to"]]
     summary_txt = f"Masse : {result.total_mass_kg:.1f} kg | Puissance : {result.total_power_w:.0f} W"
     if result.autonomy_min is not None:
