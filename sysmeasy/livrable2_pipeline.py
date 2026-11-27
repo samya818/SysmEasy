@@ -134,7 +134,7 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
     # Agent 4: Deterministic syntax validation
     syntax_ok, syntax_errors = check_sysml_syntax(sysml_code)
 
-    # Agent 5: Consultative physics check (never crashes, emits SOFT_WARNING)
+    # Agent 5: Physics check (only when physical parameters are explicitly provided)
     total_mass = round(sum(float(c.get("mass_kg", 0.0)) for c in components), 2)
     total_power = round(sum(float(c.get("power_w", 0.0)) for c in components), 2)
     soft_warnings: list[str] = []
@@ -146,10 +146,13 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
     elif max_mass is not None and total_mass > max_mass:
         soft_warnings.append(f"Masse totale ({total_mass:.2f} kg) > limite ({max_mass:.2f} kg).")
 
-    is_ac = any(k in spec_text.lower() for k in ["secteur", "v ac", "50/60 hz", "100–240", "100-240"])
+    # Autonomy: calculated ONLY if explicit battery parameters exist (NO silent default battery injection)
     autonomy_min: float | None = None
-    if not is_ac and total_power > 0.0:
-        usable_wh = float(params.get("bus_voltage_v", 24.0)) * float(params.get("battery_capacity_ah", 20.0)) * float(params.get("dod", 0.85))
+    bus_v = params.get("bus_voltage_v")
+    cap_ah = params.get("battery_capacity_ah")
+    if bus_v is not None and cap_ah is not None and float(bus_v) > 0 and float(cap_ah) > 0 and total_power > 0.0:
+        dod = float(params.get("dod", 0.85))
+        usable_wh = float(bus_v) * float(cap_ah) * dod
         autonomy_min = round((usable_wh / total_power) * 60.0, 1)
         min_auto = next((r["numerical_val"] for r in requirements if r["unit"] == "min" and r["numerical_val"] > 0), None)
         if min_auto is not None and autonomy_min < min_auto:
@@ -157,11 +160,11 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
             if is_peak:
                 soft_warnings.append(
                     f"À puissance crête ({total_power:.0f} W), autonomie = {autonomy_min:.1f} min (< {min_auto:.1f} min). "
-                    "Puissance moyenne en croisière non chiffrée dans le CDC : préciser la consommation nominale."
+                    "Préciser la consommation moyenne nominale dans le CDC."
                 )
             else:
                 soft_warnings.append(
-                    f"Autonomie calculée ({autonomy_min:.1f} min) < exigence ({min_auto:.1f} min). Envisager un pack batterie supérieur."
+                    f"Autonomie calculée ({autonomy_min:.1f} min) < exigence ({min_auto:.1f} min). Envisager une source d'énergie supérieure."
                 )
 
     # Agent 6: Satisfy recall >= 95% + eBOM generation

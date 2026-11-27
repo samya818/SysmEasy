@@ -39,6 +39,44 @@ _LM_RE = re.compile(r"([0-9]+(?:[\s\u00a0][0-9]+)*)\s*(?:lumens?|lm)\b", re.IGNO
 _SEC_RE = re.compile(r"([0-9]+(?:[.,][0-9]+)?)\s*(?:s|secondes?)\b", re.IGNORECASE)
 
 
+class CDCUnreadableError(ValueError):
+    """Raised when the input document/specification cannot be parsed into readable text (IN-05)."""
+    pass
+
+
+def validate_cdc_payload(raw_text: str, file_name: str = "") -> None:
+    """Fail-fast gate: verify that the input text contains readable specification content.
+
+    Blocks processing on binary streams, corrupt extractions, or unreadable inputs (IN-05).
+    """
+    cleaned = raw_text.strip()
+    if not cleaned:
+        raise CDCUnreadableError("Le cahier des charges fourni est vide.")
+
+    # Check for raw binary indicators (e.g. unextracted PDF binary stream or replacement characters)
+    if cleaned.startswith("%PDF-") or "\x00" in cleaned:
+        raise CDCUnreadableError(
+            "IN-05 BLOQUÉ : Le fichier transmis est un flux binaire brut non extrait. "
+            "Une extraction textuelle ou OCR préalable est requise."
+        )
+
+    # Check for placeholder messages indicating extraction failure
+    lower = cleaned.lower()
+    if "document binaire" in lower or "document compressé" in lower or "fichier non lisible" in lower:
+        raise CDCUnreadableError(
+            "IN-05 BLOQUÉ : Le document source est illisible ou compressé sans texte extractible. "
+            "Le pipeline refuse d'extrapoler sur une source invalide."
+        )
+
+    # Statistical check: must contain at least 20 printable alphabetical characters
+    alpha_chars = sum(1 for c in cleaned if c.isalpha())
+    if alpha_chars < 20:
+        raise CDCUnreadableError(
+            "IN-05 BLOQUÉ : Contenu textuel insuffisant pour établir un modèle d'ingénierie "
+            f"({alpha_chars} caractères alphabétiques détectés, minimum 20 requis)."
+        )
+
+
 def _isolate_specification_section(prompt: str) -> str:
     """Strip role/task instructions and isolate the product specification block."""
     text = prompt.replace("\r\n", "\n").replace("\r", "\n")
@@ -205,6 +243,7 @@ def parse_cdc_to_input1(
     if override_gemini_key and provider is None:
         from sysmeasy.contracts.llm_provider import detect_env_llm_provider
         provider = detect_env_llm_provider(override_gemini_key=override_gemini_key)
+    validate_cdc_payload(prompt)
     prompt = _isolate_specification_section(prompt)
     title_match = re.search(r'(?:Robot|Système|Projet|Projecteur|DataShow|Drone|Spécification)[^"\n]*?"([^"]+)"', prompt, re.IGNORECASE)
     if not title_match:

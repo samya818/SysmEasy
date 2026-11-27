@@ -280,6 +280,9 @@ def build_canonical_model_from_input(
     try:
         result = run_livrable2_pipeline(full_input, strict_llm=strict_llm, override_gemini_key=override_gemini_key)
         plan = select_diagrams(result, full_input, strict_llm=strict_llm, override_gemini_key=override_gemini_key)
+    except ValueError as exc:
+        # IN-05 Fail-fast: unreadable source, binary stream or unprocessable specification
+        raise HTTPException(status_code=422, detail=str(exc))
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 

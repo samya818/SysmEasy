@@ -87,9 +87,10 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
     # 2. Badges statut (style V1)
     n_alerts = len(alerts)
     status_txt = "ARCHITECTURE CONFORME" if n_alerts == 0 else "POINTS À CONFIRMER"
+    alert_lbl = f"{n_alerts} POINT D'ARBITRAGE IDENTIFIÉ" if n_alerts == 1 else f"{n_alerts} POINTS D'ARBITRAGE IDENTIFIÉS"
     badge_tbl = Table([[
         Paragraph(f"<b>STATUT :</b> {status_txt}", ParagraphStyle("B1", fontSize=9.5, textColor=colors.HexColor("#065F46"), fontName="Helvetica-Bold")),
-        Paragraph(f"<b>POINTS D'ARBITRAGE :</b> {n_alerts} IDENTIFIÉ(S)", ParagraphStyle("B2", fontSize=9.5, textColor=colors.HexColor("#92400E"), fontName="Helvetica-Bold")),
+        Paragraph(f"<b>ARBITRAGES :</b> {alert_lbl}", ParagraphStyle("B2", fontSize=9.5, textColor=colors.HexColor("#92400E"), fontName="Helvetica-Bold")),
     ]], colWidths=[260, 260])
     badge_tbl.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#ECFDF5")),
@@ -151,11 +152,13 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
 
     trace_rows = canonical.get("traceability_rows", [])
     if trace_rows:
-        story.append(Paragraph(f"{sec_num}. Exigences &amp; Contraintes Vérifiées", st["h2"]))
+        n_req = len(trace_rows)
+        req_suffix = "exigence" if n_req == 1 else "exigences"
+        story.append(Paragraph(f"{sec_num}. Exigences Spécifiées &amp; Traçabilité Système ({n_req} {req_suffix})", st["h2"]))
         tr_tbl_rows = [[
             Paragraph("<b>ID</b>", st["bold"]),
-            Paragraph("<b>Exigence</b>", st["bold"]),
-            Paragraph("<b>Contrainte</b>", st["bold"]),
+            Paragraph("<b>Énoncé / Cible</b>", st["bold"]),
+            Paragraph("<b>Contrainte Formelle</b>", st["bold"]),
         ]]
         for tr in trace_rows:
             tr_tbl_rows.append([
@@ -200,7 +203,7 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
         Table([[
             Paragraph("<b>SysmEasy</b> — ENSAM Meknès", st["body"]),
             Paragraph("<b>Supervision :</b> Mme I. El-Hassani & M. D. Motte", st["body"]),
-            Paragraph("<b>PFE :</b> S. Loukili & K. El Khaniri", st["body"]),
+            Paragraph("<b>Projet 4A :</b> S. Loukili & K. El Khaniri", st["body"]),
         ]], colWidths=[160, 190, 170]),
     ]
 
