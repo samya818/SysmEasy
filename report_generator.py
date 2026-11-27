@@ -105,8 +105,12 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
     if conops:
         story += [Paragraph(conops, st["body"]), Spacer(1, 10)]
 
-    # 3. Vues / Graphes sélectionnés (1er sur page 1, suivants 1 par page)
-    for idx, diag in enumerate(diagrams, start=1):
+    # 3. Vues / Graphes d'architecture sélectionnés (hors bilans budgets non pertinents pour l'employé)
+    filtered_diagrams = [
+        d for d in diagrams
+        if d.get("type") != "par" and not any(w in str(d.get("title", "")).lower() for w in ("budget", "évaluation des budgets", "evaluation des budgets"))
+    ]
+    for idx, diag in enumerate(filtered_diagrams, start=1):
         if idx > 1:
             story.append(PageBreak())
         story.append(Paragraph(f"{idx}. {diag.get('title', f'Vue {idx}')}", st["h2"]))
@@ -118,64 +122,9 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
             story.append(Paragraph(diag["comment"], st["note"]))
             story.append(Spacer(1, 8))
 
-    # 4. Dernière page : Composants (eBOM) + Points à trancher
+    # 4. Points d'Arbitrage & Recommandations (les tables brutes eBOM et Exigences sont retirées du rapport employé)
     story.append(PageBreak())
-    sec_num = len(diagrams) + 1
-
-    if ebom:
-        story.append(Paragraph(f"{sec_num}. Composants Identifiés", st["h2"]))
-        rows = [[
-            Paragraph("<b>Composant</b>", st["bold"]),
-            Paragraph("<b>Masse (kg)</b>", st["bold"]),
-            Paragraph("<b>Puissance (W)</b>", st["bold"]),
-        ]]
-        for item in ebom:
-            rows.append([
-                Paragraph(str(item.get("name", "")), st["body"]),
-                Paragraph(f"{float(item.get('mass_kg', 0.0)):.2f}", st["body"]),
-                Paragraph(f"{float(item.get('power_w', 0.0)):.0f}", st["body"]),
-            ])
-        rows.append([
-            Paragraph("<b>TOTAL</b>", st["bold"]),
-            Paragraph(f"<b>{float(phys.get('total_mass_kg', 0.0)):.2f} kg</b>", st["bold"]),
-            Paragraph(f"<b>{float(phys.get('total_power_w', 0.0)):.0f} W</b>", st["bold"]),
-        ])
-        t_ebom = Table(rows, colWidths=[300, 110, 110])
-        t_ebom.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
-            ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#CBD5E1")),
-            ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
-            ("PADDING", (0, 0), (-1, -1), 6),
-        ]))
-        story += [t_ebom, Spacer(1, 14)]
-        sec_num += 1
-
-    trace_rows = canonical.get("traceability_rows", [])
-    if trace_rows:
-        n_req = len(trace_rows)
-        req_suffix = "exigence" if n_req == 1 else "exigences"
-        story.append(Paragraph(f"{sec_num}. Exigences Spécifiées &amp; Traçabilité Système ({n_req} {req_suffix})", st["h2"]))
-        tr_tbl_rows = [[
-            Paragraph("<b>ID</b>", st["bold"]),
-            Paragraph("<b>Énoncé / Cible</b>", st["bold"]),
-            Paragraph("<b>Contrainte Formelle</b>", st["bold"]),
-        ]]
-        for tr in trace_rows:
-            tr_tbl_rows.append([
-                Paragraph(str(tr.get("id", "")), st["body"]),
-                Paragraph(str(tr.get("name", "")), st["body"]),
-                Paragraph(str(tr.get("expr", "")), st["body"]),
-            ])
-        t_tr = Table(tr_tbl_rows, colWidths=[65, 295, 160])
-        t_tr.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
-            ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#CBD5E1")),
-            ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
-            ("PADDING", (0, 0), (-1, -1), 5),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ]))
-        story += [t_tr, Spacer(1, 14)]
-        sec_num += 1
+    sec_num = len(filtered_diagrams) + 1
 
     story.append(Paragraph(f"{sec_num}. Points d'Arbitrage & Recommandations", st["h2"]))
     if alerts:

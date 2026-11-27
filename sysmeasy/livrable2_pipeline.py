@@ -15,12 +15,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from sysmeasy.contracts.llm_provider import detect_env_llm_provider
 from sysmeasy.elicitation.nl_parser import (
     _isolate_specification_section,
     _slugify_part_name,
     _to_float,
     parse_cdc_to_input1,
 )
+from sysmeasy.generation.llm_repair import complete_sysml_satisfaction, repair_sysml_syntax
 from sysmeasy.validation.antlr_compiler import check_sysml_syntax
 
 
@@ -45,6 +47,8 @@ class Livrable2Result:
     passed: bool
     traceability: list[dict[str, str]] = field(default_factory=list)
     connections: list[dict[str, str]] = field(default_factory=list)
+    repair_attempts: int = 1
+    semantic_completed: bool = False
 
 
 def _extract_conops(spec_text: str, project_name: str) -> str:
@@ -131,8 +135,23 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
     # Agent 3: Render SysML v2 with explicit satisfy links
     sysml_code = _render_livrable2_sysml(project_name, conops, requirements, components)
 
-    # Agent 4: Deterministic syntax validation
+    # Agent 4: Deterministic syntax validation with active LLM repair loop (Choice 1 & 10)
     syntax_ok, syntax_errors = check_sysml_syntax(sysml_code)
+    provider = detect_env_llm_provider(override_gemini_key=override_gemini_key)
+    repair_attempts = 1
+    if not syntax_ok and provider is not None:
+        for attempt in range(2, 4):  # max 2 tentatives de réparation
+            repair_attempts = attempt
+            repaired = repair_sysml_syntax(sysml_code, syntax_errors, provider)
+            ok_rep, err_rep = check_sysml_syntax(repaired)
+            if ok_rep:
+                sysml_code = repaired
+                syntax_ok, syntax_errors = ok_rep, err_rep
+                break
+            elif attempt == 3:
+                syntax_errors.append(
+                    "Arrêt lucide Orchestrateur : persistance d'anomalies de syntaxe après 2 essais de réparation LLM."
+                )
 
     # Agent 5: Physics check (only when physical parameters are explicitly provided)
     total_mass = round(sum(float(c.get("mass_kg", 0.0)) for c in components), 2)
@@ -167,8 +186,24 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
                     f"Autonomie calculée ({autonomy_min:.1f} min) < exigence ({min_auto:.1f} min). Envisager une source d'énergie supérieure."
                 )
 
-    # Agent 6: Satisfy recall >= 95% + eBOM generation
+    # Agent 6: Satisfy recall >= 95% + Boucle sémantique vers Agent 3 (Choix 10, p. 12)
+    root_name = _slugify_part_name(project_name) + "System"
     recall_pct = _compute_satisfy_recall(sysml_code, requirements)
+    semantic_completed = False
+    if recall_pct < 95.0 and requirements:
+        missing_req_ids = [
+            r["id"]
+            for r in requirements
+            if f"satisfy '{r['id']}'" not in sysml_code
+            and f"satisfy {r['id']}" not in sysml_code
+        ]
+        if missing_req_ids:
+            sysml_code = complete_sysml_satisfaction(sysml_code, missing_req_ids, root_name)
+            semantic_completed = True
+            # Re-vérification syntaxique et sémantique obligatoire (Choix 10, p. 12)
+            syntax_ok, syntax_errors = check_sysml_syntax(sysml_code)
+            recall_pct = _compute_satisfy_recall(sysml_code, requirements)
+
     ebom = [
         {
             "repere": f"CMP-{idx:02d}",
@@ -181,7 +216,6 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
         for idx, c in enumerate(components, start=1)
     ]
 
-    root_name = _slugify_part_name(project_name) + "System"
     traceability = [
         {
             "id": r["id"],
@@ -212,4 +246,6 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
         passed=passed,
         traceability=traceability,
         connections=connections,
+        repair_attempts=repair_attempts,
+        semantic_completed=semantic_completed,
     )
