@@ -3,7 +3,7 @@ SysmEasy - Plateforme d'Assistance à l'Ingénierie Système & Modélisation Sys
 Projet de Fin d'Études (PFE) — ENSAM Meknès
 Auteures : Samya Loukili & Kenza El Khaniri
 Supervision : Mme Ibtissam El-Hassani & M. Damien Motte
-Filière : Génie Industriel & Productique (GIA / DTSI)
+Filière : Génie IA & Data Technologies et Systèmes Industriels (GIA / DTSI)
 """
 
 import os
