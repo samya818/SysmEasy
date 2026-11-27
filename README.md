@@ -61,8 +61,14 @@ pytest tests/ -v
 python scripts/verify_audit_chain.py
 
 # Start the web interface
-uvicorn server:app --reload
+uvicorn server:app --host 127.0.0.1 --port 8000 --reload
 ```
+
+### Gemini API Key Configuration
+
+Each user must provide their own Gemini API key (`.env` is excluded from Git):
+- **Via the web UI**: open `http://127.0.0.1:8000`, click the **Clé API Gemini** button in the right sidebar, paste your key, and save.
+- **Via `.env`**: create a `.env` file at the project root containing `GEMINI_API_KEY=your_key_here`.
 
 ---
 
