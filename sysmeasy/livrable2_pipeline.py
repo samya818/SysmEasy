@@ -63,11 +63,37 @@ def _extract_conops(spec_text: str, project_name: str) -> str:
     return f"Modélisation système de {project_name}."
 
 
+def _domain_to_port_def(domain: str) -> str:
+    clean = re.sub(r"[^A-Za-z0-9]", "", str(domain or "Signal")).capitalize()
+    return f"{clean}Port" if not clean.endswith("Port") else clean
+
+
+def _extract_states_for_sysml(conops: str, spec_text: str) -> tuple[list[str], list[str]]:
+    """Extract operational modes/states and transition guards from spec text when present."""
+    text = f"{conops} {spec_text}".lower()
+    candidates = [
+        ("Veille", ["veille", "arrêt", "arret", "standby", "au sol"]),
+        ("PreVol", ["pré-vol", "pre-vol", "initialisation", "démarrage", "demarrage", "boot"]),
+        ("EnVol", ["en vol", "croisière", "nominal", "mission", "livraison", "projection", "travail", "marche"]),
+        ("Evitement", ["évitement", "evitement", "obstacle", "lidar"]),
+        ("RetourBase", ["retour", "base", "rtl"]),
+        ("Urgence", ["urgence", "surchauffe", "défaut", "defaut", "perte", "panne"]),
+    ]
+    states = [name for name, kws in candidates if any(k in text for k in kws)]
+    if len(states) < 2:
+        return [], []
+    guards = ["init_ok", "mission_active", "obstacle_ou_seuil", "retour_ou_fin", "anomalie_critique"]
+    return states[:5], guards
+
+
 def _render_livrable2_sysml(
     project_name: str,
     conops: str,
     requirements: list[dict[str, Any]],
     components: list[dict[str, Any]],
+    connections: list[dict[str, str]] | None = None,
+    physics_params: dict[str, Any] | None = None,
+    spec_text: str = "",
 ) -> str:
     lines = [
         f"package '{project_name}' {{",
@@ -76,6 +102,17 @@ def _render_livrable2_sysml(
         f"    doc /* {conops.replace('*/', '')} */",
         "",
     ]
+
+    # Declare port defs explicitly for every domain used by components
+    domains = sorted({
+        _domain_to_port_def(p.get("domain", "Signal"))
+        for comp in components
+        for p in comp.get("ports", [])
+    })
+    for pdef in domains:
+        lines.append(f"    port def {pdef};")
+    if domains:
+        lines.append("")
 
     for req in requirements:
         lines.extend([
@@ -94,18 +131,60 @@ def _render_livrable2_sysml(
             f"        attribute power_w : Real = {comp['power_w']};",
         ])
         for port in comp.get("ports", []):
-            lines.append(f"        {port['direction']} port {port['name']} : {port['domain']};")
+            pdef = _domain_to_port_def(port.get("domain", "Signal"))
+            lines.append(f"        {port['direction']} port {port['name']} : {pdef};")
         lines.append("    }")
     lines.append("")
 
-    # Root assembly + satisfy links (Agent 3 & Agent 6 traceability)
+    # Explicit battery/power parameters in SysML when provided (no hidden magic numbers)
+    params = physics_params or {}
+    if params.get("bus_voltage_v") and params.get("battery_capacity_ah"):
+        lines.extend([
+            "    part def PowerBudget {",
+            f"        attribute bus_voltage_v : Real = {float(params['bus_voltage_v'])};",
+            f"        attribute battery_capacity_ah : Real = {float(params['battery_capacity_ah'])};",
+            f"        attribute dod : Real = {float(params.get('dod', 0.85))};",
+            "    }",
+            "",
+        ])
+
+    # State machine in SysML v2 when operational modes are present in the spec
+    states, guards = _extract_states_for_sysml(conops, spec_text)
+    if states:
+        lines.append("    state def OperationalModes {")
+        for st in states:
+            lines.append(f"        state {st};")
+        for i in range(len(states) - 1):
+            g = guards[i % len(guards)]
+            lines.append(f"        transition {states[i]}_to_{states[i+1]} first {states[i]} accept {g} then {states[i+1]};")
+        lines.append("    }")
+        lines.append("")
+
+    # Root assembly with explicit `connect` links between matching out -> in ports
     root_name = _slugify_part_name(project_name) + "System"
+    comp_by_name = {c["name"]: c for c in components}
     lines.append(f"    part def {root_name} {{")
     for comp in components:
         lines.append(f"        part {comp['name'].lower()} : {comp['name']};")
-    for req in requirements:
-        lines.append(f"        satisfy '{req['id']}' by {root_name};")
+
+    for cn in (connections or []):
+        src = comp_by_name.get(cn.get("from", ""))
+        dst = comp_by_name.get(cn.get("to", ""))
+        if not src or not dst or src["name"] == dst["name"]:
+            continue
+        dom = cn.get("domain", "")
+        src_port = next((p["name"] for p in src.get("ports", []) if p.get("direction") == "out" and (not dom or p.get("domain") == dom)), None)
+        dst_port = next((p["name"] for p in dst.get("ports", []) if p.get("direction") == "in" and (not dom or p.get("domain") == dom)), None)
+        if src_port and dst_port:
+            lines.append(f"        connect {src['name'].lower()}.{src_port} to {dst['name'].lower()}.{dst_port};")
+
     lines.append("    }")
+    lines.append("")
+
+    # Top-level system instance & satisfy links (no self-reference inside part def)
+    lines.append(f"    part system : {root_name};")
+    for req in requirements:
+        lines.append(f"    satisfy '{req['id']}' by system;")
     lines.append("}")
     return "\n".join(lines) + "\n"
 
@@ -132,8 +211,16 @@ def run_livrable2_pipeline(prompt: str, *, strict_llm: bool = False, override_ge
     conops = content.get("conops") or _extract_conops(spec_text, project_name)
     connections: list[dict[str, str]] = list(content.get("connections", []))
 
-    # Agent 3: Render SysML v2 with explicit satisfy links
-    sysml_code = _render_livrable2_sysml(project_name, conops, requirements, components)
+    # Agent 3: Render SysML v2 with explicit port defs, connect, state def, PowerBudget & satisfy links
+    sysml_code = _render_livrable2_sysml(
+        project_name,
+        conops,
+        requirements,
+        components,
+        connections=connections,
+        physics_params=params,
+        spec_text=spec_text,
+    )
 
     # Agent 4: Deterministic syntax validation with active LLM repair loop (Choice 1 & 10)
     syntax_ok, syntax_errors = check_sysml_syntax(sysml_code)

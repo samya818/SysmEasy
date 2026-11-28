@@ -17,10 +17,10 @@ class SyntaxDiagnostic:
 
 
 _BLOCK_HEADER_RE = re.compile(
-    r"^(package|requirement\s+def|part\s+def|port\s+def|action\s+def|constraint\s+def)\s+"
+    r"^(package|requirement\s+def|part\s+def|port\s+def|action\s+def|constraint\s+def|state\s+def)\s+"
 )
 _STATEMENT_RE = re.compile(
-    r"^(doc\s+/\*.*\*/|private\s+import\s+|attribute\s+|part\s+|(in|out|inout)\s+port\s+|satisfy\s+|connect\s+)"
+    r"^(doc\s+/\*.*\*/|private\s+import\s+|attribute\s+|part\s+|(in|out|inout)\s+port\s+|port\s+def\s+|satisfy\s+|connect\s+|state\s+|transition\s+|require\s+constraint\s+)"
 )
 
 
