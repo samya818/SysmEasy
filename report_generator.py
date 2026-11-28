@@ -192,6 +192,59 @@ def generate_dynamic_pdf_report(canonical: dict, output_path: str, doc_name: str
         ]], colWidths=[160, 190, 170]),
     ]
 
+    # 5. Tableau couverture des vues SysML v2 (sans générer de nouveaux diagrammes)
+    story.append(PageBreak())
+    story.append(Paragraph(f"{sec_num + 1}. Couverture des vues SysML v2", st["h2"]))
+    story.append(Paragraph(
+        "Tableau de conformité : vues attendues par la méthode SysmEasy vs vues effectivement produites dans ce rapport.",
+        st["body"]
+    ))
+    story.append(Spacer(1, 6))
+    all_views = [
+        ("packages", "Diagramme de packages"),
+        ("req", "Diagramme d'exigences (REQ)"),
+        ("uc", "Cas d'utilisation (Use Case)"),
+        ("bdd", "Diagramme de blocs (BDD)"),
+        ("ibd", "Diagramme interne de blocs (IBD)"),
+        ("act", "Diagramme d'activité"),
+        ("sd", "Diagramme de séquence"),
+        ("stm", "Machine à états (STM)"),
+        ("par", "Diagramme paramétrique (PAR)"),
+    ]
+    produced_types = {str(d.get("type", "")).lower() for d in diagrams}
+    cov_rows = [[
+        Paragraph("<b>Type</b>", st["bold"]),
+        Paragraph("<b>Vue</b>", st["bold"]),
+        Paragraph("<b>Statut</b>", st["bold"]),
+    ]]
+    for vtype, vlabel in all_views:
+        present = vtype in produced_types
+        status_txt = "Presente" if present else "Absente"
+        status_style = ParagraphStyle("VS", fontSize=9, fontName="Helvetica-Bold",
+                                      textColor=colors.HexColor("#065F46") if present else colors.HexColor("#991B1B"))
+        cov_rows.append([
+            Paragraph(vtype, st["body"]),
+            Paragraph(vlabel, st["body"]),
+            Paragraph(status_txt, status_style),
+        ])
+    cov_tbl = Table(cov_rows, colWidths=[70, 290, 160])
+    cov_tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
+        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#CBD5E1")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
+        ("PADDING", (0, 0), (-1, -1), 5),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    story.append(cov_tbl)
+    story.append(Spacer(1, 8))
+    n_absent = sum(1 for vt, _ in all_views if vt not in produced_types)
+    if n_absent > 0:
+        story.append(Paragraph(
+            f"{n_absent} vue(s) non produite(s) dans ce rapport. Ces vues peuvent etre generees "
+            "si les donnees correspondantes sont presentes dans le cahier des charges.",
+            st["warn"]
+        ))
+
     doc.build(story)
     return output_path
 
