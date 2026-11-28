@@ -1,9 +1,9 @@
-﻿"""
-SysmEasy - Plateforme d'Assistance Ã  l'IngÃ©nierie SystÃ¨me & ModÃ©lisation SysML v2
-Projet de Fin d'Ã‰tudes (PFE) â€” ENSAM MeknÃ¨s
+"""
+SysmEasy - Plateforme d'Assistance à l'Ingénierie Système & Modélisation SysML v2
+Projet de Fin d'Études (PFE) — ENSAM Meknès
 Auteures : Samya Loukili & Kenza El Khaniri
 Supervision : Mme Ibtissam El-Hassani & M. Damien Motte
-FiliÃ¨re : GÃ©nie IA & Data Technologies et SystÃ¨mes Industriels (GIA / DTSI)
+Filière : Génie IA & Data Technologies et Systèmes Industriels (GIA / DTSI)
 """
 
 import os
@@ -41,8 +41,8 @@ DYNAMIC_REPORTS: dict[str, dict] = {}
 
 
 app = FastAPI(
-    title="SysmEasy - Studio d'IngÃ©nierie SystÃ¨me SysML v2",
-    description="Plateforme de formalisation MBSE et de vÃ©rification d'invariants formels",
+    title="SysmEasy - Studio d'Ingénierie Système SysML v2",
+    description="Plateforme de formalisation MBSE et de vérification d'invariants formels",
     version="1.0.0"
 )
 
@@ -52,15 +52,15 @@ _IS_VERCEL = bool(os.environ.get("VERCEL"))
 GENERATED_DIR = "/tmp/sysmeasy_generated" if _IS_VERCEL else os.path.join(STATIC_DIR, "generated")
 os.makedirs(GENERATED_DIR, exist_ok=True)
 
-# Ã‰tat de la passerelle d'interopÃ©rabilitÃ© PLM (Standard OSLC / SysML v2 API)
+# État de la passerelle d'interopérabilité PLM (Standard OSLC / SysML v2 API)
 plm_state = {
     "connected": False,
     "mode": "Sandbox Standalone (Export OSLC / JSON-LD)",
     "target_system": "Dassault 3DEXPERIENCE / PTC Windchill",
     "endpoint_url": "https://plm-gateway.internal/oslc/sysmlv2",
-    "auth_status": "Non couplÃ© (ClÃ© API Entreprise requise)",
-    "last_sync": "PrÃªt pour export",
-    "state": "Standby (Non couplÃ©)",
+    "auth_status": "Non couplé (Clé API Entreprise requise)",
+    "last_sync": "Prêt pour export",
+    "state": "Standby (Non couplé)",
     "protocol": "OSLC 3.0 / OMG SysML v2 REST Services"
 }
 
@@ -88,12 +88,12 @@ async def get_gemini_key_status():
     _load_dotenv()
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     has_default = bool(key)
-    masked = f"{key[:4]}â€¦{key[-4:]}" if len(key) >= 10 else ("***" if key else "")
+    masked = f"{key[:4]}…{key[-4:]}" if len(key) >= 10 else ("***" if key else "")
     return JSONResponse({
         "configured": has_default,
         "masked": masked,
         "has_default": has_default,
-        "message": "ClÃ© par dÃ©faut active" if has_default else "Aucune clÃ© configurÃ©e",
+        "message": "Clé par défaut active" if has_default else "Aucune clé configurée",
     })
 
 
@@ -104,14 +104,14 @@ async def update_gemini_key(req: GeminiKeyRequest):
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Erreur serveur lors de la validation de la clÃ© : {exc}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur lors de la validation de la clé : {exc}")
     key = req.api_key.strip()
-    masked = f"{key[:4]}â€¦{key[-4:]}" if len(key) >= 10 else "***"
+    masked = f"{key[:4]}…{key[-4:]}" if len(key) >= 10 else "***"
     return JSONResponse({
         "success": True,
         "masked": masked,
         "active_model": models[0] if models else "gemini-2.5-flash",
-        "message": f"ClÃ© Gemini validÃ©e ({models[0] if models else 'gemini'} actif).",
+        "message": f"Clé Gemini validée ({models[0] if models else 'gemini'} actif).",
     })
 
 
@@ -125,23 +125,23 @@ async def get_plm_status():
 
 @app.post("/api/plm/test-connection")
 async def test_plm_connection(req: PLMConfigRequest):
-    """Teste honnÃªtement l'accÃ¨s au serveur PLM distant ou informe sur l'Ã©tat Sandbox."""
+    """Teste honnêtement l'accès au serveur PLM distant ou informe sur l'état Sandbox."""
     if not req.server_url or not req.api_token:
         return JSONResponse({
             "success": False,
-            "message": "Mode Sandbox actif : Pour vous connecter Ã  un serveur PLM de production (ex: Dassault 3DEXPERIENCE), veuillez renseigner l'URL OSLC et un jeton API OAuth2 valide.",
+            "message": "Mode Sandbox actif : Pour vous connecter à un serveur PLM de production (ex: Dassault 3DEXPERIENCE), veuillez renseigner l'URL OSLC et un jeton API OAuth2 valide.",
             "status": "Sandbox Standalone"
         })
-    # Si des identifiants sont fournis, on tente ou on signale la restriction rÃ©seau
+    # Si des identifiants sont fournis, on tente ou on signale la restriction réseau
     return JSONResponse({
         "success": False,
-        "message": f"Tentative d'accÃ¨s Ã  {req.server_url} : Serveur distant inaccessible depuis le rÃ©seau local universitaire (VPN ou Proxy d'entreprise requis).",
-        "status": "Ã‰chec de connexion rÃ©seau"
+        "message": f"Tentative d'accès à {req.server_url} : Serveur distant inaccessible depuis le réseau local universitaire (VPN ou Proxy d'entreprise requis).",
+        "status": "Échec de connexion réseau"
     })
 
 @app.get("/api/plm/export-payload/{model_key}")
 async def export_plm_payload(model_key: str):
-    """GÃ©nÃ¨re et tÃ©lÃ©charge le payload d'interopÃ©rabilitÃ© officiel OMG SysML v2 / OSLC pour import PLM."""
+    """Génère et télécharge le payload d'interopérabilité officiel OMG SysML v2 / OSLC pour import PLM."""
     payload = {
         "@context": {
             "oslc": "http://open-services.net/ns/core#",
@@ -151,9 +151,9 @@ async def export_plm_payload(model_key: str):
         },
         "@type": "sysml:Package",
         "identifier": f"PKG-PLM-{model_key.upper()}-2026",
-        "title": f"ModÃ¨le Export SysML v2 pour ContinuitÃ© PLM ({model_key})",
+        "title": f"Modèle Export SysML v2 pour Continuité PLM ({model_key})",
         "created": datetime.now().isoformat(),
-        "source": "SystÃ¨me Multi-Agents IA â€” ENSAM MeknÃ¨s",
+        "source": "Système Multi-Agents IA — ENSAM Meknès",
         "interoperabilityStandard": "OMG Systems Modeling API & Services 1.0 (Beta)",
         "elements": [
             {
@@ -187,7 +187,7 @@ async def get_image(image_name: str):
     for c in candidates:
         if os.path.exists(c):
             return FileResponse(c)
-    raise HTTPException(status_code=404, detail="Image non trouvÃ©e")
+    raise HTTPException(status_code=404, detail="Image non trouvée")
 
 @app.get("/api/export-report/{model_key}")
 async def export_pdf_report(model_key: str, doc_name: Optional[str] = None):
@@ -200,11 +200,11 @@ async def export_pdf_report(model_key: str, doc_name: Optional[str] = None):
             generate_executive_pdf_report(model_key, pdf_path, doc_name=doc_name)
         return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_filename)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la gÃ©nÃ©ration du rapport PDF : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération du rapport PDF : {str(e)}")
 
 
 # =============================================================================
-# MOTEUR GÃ‰NÃ‰RALISABLE D'EXTRACTION SÃ‰MANTIQUE & RENDU DYNAMIQUE
+# MOTEUR GÉNÉRALISABLE D'EXTRACTION SÉMANTIQUE & RENDU DYNAMIQUE
 # =============================================================================
 
 def _render_dynamic_ibd(project_name: str, components: list[dict], physics, output_path: str) -> None:
@@ -319,20 +319,20 @@ def build_canonical_model_from_input(
         {"title": "Alerte physique (Agent 5)", "text": w, "severity": "SOFT_WARNING"}
         for w in result.soft_warnings
     ] + [
-        {"title": "AmbiguÃ¯tÃ© CDC Ã  escalader", "text": amb, "severity": "Ã€ confirmer"}
+        {"title": "Ambiguïté CDC à escalader", "text": amb, "severity": "À confirmer"}
         for amb in result.ambiguities
     ]
 
     canonical = {
-        "title": f"{project_name} â€” ModÃ¨le SysML v2",
-        "badge": f"MÃ©thode {plan.methodology} | {len(diagrams)} vues",
+        "title": f"{project_name} — Modèle SysML v2",
+        "badge": f"Méthode {plan.methodology} | {len(diagrams)} vues",
         "model_key": model_key,
         "methodology": plan.methodology,
         "conops": result.conops,
         "diagram_img": primary_img_url,
         "diagrams": diagrams,
         "metier": {
-            "title": f"SynthÃ¨se IngÃ©nierie â€” {project_name}",
+            "title": f"Synthèse Ingénierie — {project_name}",
             "summary": summary_items,
             "pdf_references": [],
             "alerts": alerts,
@@ -378,13 +378,13 @@ def build_canonical_model_from_input(
 @app.post("/api/run-pipeline")
 async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
     """
-    Point d'entrÃ©e universel du pipeline multi-agents.
-    ReÃ§oit n'importe quel besoin, extrait le graphe canonique,
-    exÃ©cute l'audit dÃ©terministe Ã  0 token des 5 Invariants,
-    et gÃ©nÃ¨re le bundle complet (MÃ©tier + Expert + Matrices).
+    Point d'entrée universel du pipeline multi-agents.
+    Reçoit n'importe quel besoin, extrait le graphe canonique,
+    exécute l'audit déterministe à 0 token des 5 Invariants,
+    et génère le bundle complet (Métier + Expert + Matrices).
     """
     user_key = request.headers.get("x-gemini-api-key") or None
-    # 1. Extraction et ModÃ©lisation Canonique (Agent 1)
+    # 1. Extraction et Modélisation Canonique (Agent 1)
     canonical = build_canonical_model_from_input(
         req.prompt, req.attached_file_name, req.attached_file_content, req.view_level,
         override_gemini_key=user_key,
@@ -414,10 +414,10 @@ async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
     matrices_data = {
         "M_domaine": [],
         "direction_logic": [
-            {"src_dir": "out", "dst_dir": "in", "rule": "Alimentation Source â”€â”€> Charge", "status": "VALIDE âœ“", "class": "text-emerald-600 font-bold"},
-            {"src_dir": "out", "dst_dir": "out", "rule": "Conflit de Sources (Court-circuit)", "status": "REJETÃ‰ âœ—", "class": "text-red-600 font-bold"},
-            {"src_dir": "in", "dst_dir": "in", "rule": "Absence de Source (Circuit inerte)", "status": "REJETÃ‰ âœ—", "class": "text-red-600 font-bold"},
-            {"src_dir": "Port", "dst_dir": "~Port", "rule": "Interface Service ConjuguÃ©e", "status": "VALIDE âœ“", "class": "text-emerald-600 font-bold"}
+            {"src_dir": "out", "dst_dir": "in", "rule": "Alimentation Source ──> Charge", "status": "VALIDE ✓", "class": "text-emerald-600 font-bold"},
+            {"src_dir": "out", "dst_dir": "out", "rule": "Conflit de Sources (Court-circuit)", "status": "REJETÉ ✗", "class": "text-red-600 font-bold"},
+            {"src_dir": "in", "dst_dir": "in", "rule": "Absence de Source (Circuit inerte)", "status": "REJETÉ ✗", "class": "text-red-600 font-bold"},
+            {"src_dir": "Port", "dst_dir": "~Port", "rule": "Interface Service Conjuguée", "status": "VALIDE ✓", "class": "text-emerald-600 font-bold"}
         ],
         "M_item": [],
         "M_statut": []
@@ -428,14 +428,14 @@ async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
             "src": item["source"],
             "dst": item["target"],
             "dom": item["src_domain"],
-            "status": "1 (Valide âœ“)" if item["valid"] else "0 (RejetÃ© âœ—)"
+            "status": "1 (Valide ✓)" if item["valid"] else "0 (Rejeté ✗)"
         })
     if not matrices_data["M_domaine"]:
         matrices_data["M_domaine"].append({
             "src": "source.port",
             "dst": "target.port",
             "dom": "mechanical_torque",
-            "status": "1 (Valide âœ“)"
+            "status": "1 (Valide ✓)"
         })
 
     for item in audit_report.get("matrices", {}).get("M_item", []):
@@ -451,7 +451,7 @@ async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
         matrices_data["M_item"].append({
             "name": "flow of MechanicalTorque",
             "qty": "Moment de force / Couple",
-            "unit": "[NÂ·m]",
+            "unit": "[N·m]",
             "border": "border-emerald-200",
             "bg": "bg-emerald-50/60",
             "txt": "text-emerald-900"
@@ -461,7 +461,7 @@ async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
         badge = "bg-emerald-100 text-emerald-700" if item["status"] == "CONNECTED_ACTIVE" else "bg-amber-100 text-amber-800"
         matrices_data["M_statut"].append({
             "comp": item["component"],
-            "desc": f"Composant du systÃ¨me (degrÃ© {item['degree']})",
+            "desc": f"Composant du système (degré {item['degree']})",
             "status": item["status"],
             "badge": badge
         })
@@ -471,7 +471,7 @@ async def run_pipeline_endpoint(req: PipelineRequest, request: Request):
     for tr in source_trace:
         traceability_data.append({
             "id": tr.get("req_id", "REQ-01"),
-            "name": tr.get("statement", "Exigence systÃ¨me"),
+            "name": tr.get("statement", "Exigence système"),
             "expr": tr.get("constraint", "-")
         })
 
@@ -534,8 +534,8 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 if __name__ == "__main__":
     print("=" * 60)
-    print(" DÃ‰MARRAGE DU SERVEUR AGENTIC SYSML V2 (ENSAM MEKNÃˆS)")
-    print(" ðŸ‘‰ Interface active sur : http://127.0.0.1:8000")
+    print(" DÉMARRAGE DU SERVEUR AGENTIC SYSML V2 (ENSAM MEKNÈS)")
+    print(" 👉 Interface active sur : http://127.0.0.1:8000")
     print("=" * 60)
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
 
